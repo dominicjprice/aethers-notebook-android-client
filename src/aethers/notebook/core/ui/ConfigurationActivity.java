@@ -215,8 +215,6 @@ extends PreferenceActivity
                         Intent intent = new Intent(ConfigurationActivity.this, CoreService.class);
                         if(configuration.isEnabled())
                             startService(intent);
-                        else
-                            stopService(intent);
                     }
                 });
     }

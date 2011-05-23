@@ -14,6 +14,13 @@ extends PushLogger<PhoneStateListener>
 {            
     private static final LoggerServiceIdentifier IDENTIFIER = new LoggerServiceIdentifier(
             "aethers.notebook.logger.managed.dataconnectionstate.DataConnectionStateLogger");
+    {
+        IDENTIFIER.setConfigurable(false);
+        IDENTIFIER.setDescription("Logs when the data connection state changes.");
+        IDENTIFIER.setName("Data Connection State Logger");
+        IDENTIFIER.setServiceClass(DataConnectionStateLogger.class.getName());
+        IDENTIFIER.setVersion(1);
+    }
 
     private static final String ENCODING = "UTF-8";
     

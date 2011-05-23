@@ -21,6 +21,13 @@ extends PushLogger<PhoneStateListener>
 {
     private static final LoggerServiceIdentifier IDENTIFIER = new LoggerServiceIdentifier(
             "aethers.notebook.logger.managed.celllocation.CellLocationLogger");
+    {
+        IDENTIFIER.setConfigurable(false);
+        IDENTIFIER.setDescription("Logs when the cell location changes.");
+        IDENTIFIER.setName("Cell Location Logger");
+        IDENTIFIER.setServiceClass(CellLocationLogger.class.getName());
+        IDENTIFIER.setVersion(1);
+    }
 
     private static final String ENCODING = "UTF-8";
     

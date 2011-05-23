@@ -1,7 +1,9 @@
 package aethers.notebook.core;
 
 import java.util.ArrayList;
+import java.util.HashMap;
 import java.util.List;
+import java.util.Map;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Configuration.AppenderConfigurationHolder;
@@ -24,7 +26,7 @@ import android.os.RemoteException;
 
 public class CoreService
 extends Service
-{    
+{   
     private static Logger logger = Logger.getLogger(CoreService.class);
     
     private class LocationStatusListener
@@ -134,8 +136,6 @@ extends Service
             if(!force && currentProvider != null && currentProvider.equals(best))
                 return;
             
-            logger.debug("Switching location provider to: " + best);
-            
             if(currentProvider != null)
                 locationManager.removeUpdates(this);
             
@@ -196,6 +196,8 @@ extends Service
     
     private List<AppenderService> activeAppenders = new ArrayList<AppenderService>();
     
+    private Map<String, ServiceConnection> activeConnections = new HashMap<String, ServiceConnection>();
+    
     private final Object appenderSync = new Object();
     
     private SharedPreferences.OnSharedPreferenceChangeListener loggerPreferenceListener = 
@@ -210,6 +212,13 @@ extends Service
                         startStopLoggers();
                     else if(key.equals(getString(R.string.Preferences_appenders)))
                         startStopAppenders();
+                    else if(key.equals(getString(R.string.Preferences_enabled)) 
+                            && !configuration.isEnabled())
+                    {
+                        startStopLoggers();
+                        startStopAppenders();
+                        stopSelf();
+                    }
                 }
             };
             
@@ -250,8 +259,7 @@ extends Service
         {
             if(running)
                 return START_STICKY;
-            running = true;
-            logger.verbose("CoreService started");                
+            running = true;         
             if(configuration.isEnabled())
             {
                 startStopLoggers();
@@ -270,6 +278,7 @@ extends Service
     
     private void startStopLoggers()
     {
+        final boolean loggingEnabled = configuration.isEnabled();
         for(final LoggerConfigurationHolder holder : configuration.getLoggerConfigurationHolders())
         {
             try
@@ -287,8 +296,7 @@ extends Service
                                 LoggerService s = (LoggerService)service;
                                 try
                                 {
-                                    logger.debug("Logger '" + holder.getName() + "' Status: " + holder.isEnabled());
-                                    if(holder.isEnabled())
+                                    if(holder.isEnabled() && loggingEnabled)
                                         s.start();
                                     else
                                         s.stop();
@@ -311,6 +319,7 @@ extends Service
     
     private void startStopAppenders()
     {
+        final boolean loggingEnabled = configuration.isEnabled();
         final ArrayList<AppenderService> appenders = new ArrayList<AppenderService>();
         
         for(final AppenderConfigurationHolder holder : configuration.getAppenderConfigurationHolders())
@@ -339,14 +348,18 @@ extends Service
                                 AppenderService appenderService = AppenderService.Stub.asInterface(service);
                                 try
                                 {
-                                    logger.debug("Appender '" + holder.getName() + "' Status: " + holder.isEnabled());
-                                    if(holder.isEnabled())
+                                    if(holder.isEnabled() && loggingEnabled)
                                     {
                                         appenderService.start();
                                         appenders.add(appenderService);
+                                        activeConnections.put(name.getPackageName() + name.getClassName(), this);
                                     }
                                     else
+                                    {
                                         appenderService.stop();
+                                        unbindService(this);
+                                        unbindService(activeConnections.remove(name.getPackageName() + name.getClassName()));
+                                    }
                                 }
                                 catch(RemoteException e)
                                 {

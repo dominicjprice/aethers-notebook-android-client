@@ -77,6 +77,8 @@ implements Runnable
                                     o.putPOJO("location", location);
                                     o.put("data", data);
                                     m.writeTree(gen, o);
+                                    fileOut.write("\n");
+                                    fileOut.flush();
                                 }
                                 catch(Exception e)
                                 {
@@ -162,7 +164,7 @@ implements Runnable
         {
             try
             {
-                fileOut = new BufferedWriter(new FileWriter(config.getLogfilePath()));
+                fileOut = new BufferedWriter(new FileWriter(config.getLogfilePath(), true));
             }
             catch(IOException e)
             {
@@ -186,7 +188,7 @@ implements Runnable
                             try
                             {
                                 fileOut.close();
-                                fileOut = new BufferedWriter(new FileWriter(config.getLogfilePath()));
+                                fileOut = new BufferedWriter(new FileWriter(config.getLogfilePath(), true));
                             }
                             catch(IOException e)
                             {

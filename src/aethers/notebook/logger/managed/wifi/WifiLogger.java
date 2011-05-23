@@ -28,6 +28,13 @@ implements Runnable
 {
     private static final LoggerServiceIdentifier IDENTIFIER = new LoggerServiceIdentifier(
             "aethers.notebook.logger.managed.wifi.WifiLogger");
+    {
+        IDENTIFIER.setConfigurable(false);
+        IDENTIFIER.setDescription("Logs the results of scanning Wifi access points");
+        IDENTIFIER.setName("Wifi Logger");
+        IDENTIFIER.setServiceClass(WifiLogger.class.getName());
+        IDENTIFIER.setVersion(1);
+    }
 
     private static final String ENCODING = "UTF-8";
     

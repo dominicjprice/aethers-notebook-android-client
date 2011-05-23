@@ -16,7 +16,6 @@ public class ConfigurationTemplate
         prefs = context.getSharedPreferences(
                 sharedPreferencesName, 
                 Context.MODE_PRIVATE);
-        prefs.edit().clear().commit(); //FIXME For development only
     }
     
     public void registerChangeListener(OnSharedPreferenceChangeListener listener)
