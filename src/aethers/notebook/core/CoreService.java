@@ -358,7 +358,8 @@ extends Service
                                     {
                                         appenderService.stop();
                                         unbindService(this);
-                                        unbindService(activeConnections.remove(name.getPackageName() + name.getClassName()));
+                                        if(activeConnections.containsKey(name.getPackageName() + name.getClassName()))
+                                            unbindService(activeConnections.remove(name.getPackageName() + name.getClassName()));
                                     }
                                 }
                                 catch(RemoteException e)

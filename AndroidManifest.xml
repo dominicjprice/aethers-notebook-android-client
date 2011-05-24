@@ -32,6 +32,7 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".core.ui.filechooser.FileChooser" />
             
         <service android:name=".core.CoreService" />
         
@@ -43,7 +44,11 @@
         <service android:name=".logger.managed.signalstrength.SignalStrengthLogger" />
         <service android:name=".logger.managed.wifi.WifiLogger" />
         
-        <receiver android:name=".core.BootReceiver" />
+        <receiver android:name=".core.BootReceiver" >
+            <intent-filter>
+                <action android:name="android.intent.action.BOOT_COMPLETED" />
+            </intent-filter>
+        </receiver>
     
     </application>
     
