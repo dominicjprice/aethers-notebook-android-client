@@ -10,6 +10,7 @@ import java.util.Map;
 import org.codehaus.jackson.map.ObjectMapper;
 
 import aethers.notebook.R;
+import aethers.notebook.core.Action;
 import aethers.notebook.core.AppenderService;
 import aethers.notebook.core.Configuration;
 import aethers.notebook.core.CoreService;
@@ -332,7 +333,7 @@ extends PreferenceActivity
             if(holder.isDeleted())
                 continue;
             
-            PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
+            final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
             ps.setTitle(holder.getName());
             ps.setSummary(holder.getDescription());
                         
@@ -393,6 +394,88 @@ extends PreferenceActivity
                 NonPersistingButtonPreference remove = new NonPersistingButtonPreference(this);
                 remove.setTitle("Remove");
                 ps.addItemFromInflater(remove);
+            }
+            
+            try
+            {
+                bindService(
+                        new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
+                        new ServiceConnection()
+                        {
+                            @Override
+                            public void onServiceDisconnected(ComponentName name) { }
+                            
+                            @Override
+                            public void onServiceConnected(ComponentName name, IBinder service)
+                            {
+                                AppenderService as = AppenderService.Stub.asInterface(service);
+                                try
+                                {
+                                    List<Action> actions = as.listActions();
+                                    if(actions == null || actions.size() == 0)
+                                        return;
+                                    for(final Action action : actions)
+                                    {
+                                        NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                                        p.setTitle(action.getName());
+                                        p.setSummary(action.getDescription());
+                                        p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                                        {
+                                            @Override
+                                            public boolean onPreferenceClick(Preference preference) 
+                                            {
+                                                try
+                                                {
+                                                    bindService(new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
+                                                            new ServiceConnection()
+                                                            {
+                                                                @Override
+                                                                public void onServiceDisconnected(ComponentName name) { }
+                                                                
+                                                                @Override
+                                                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                                                {
+                                                                    AppenderService as = AppenderService.Stub.asInterface(service);
+                                                                    try
+                                                                    {
+                                                                        as.doAction(action);
+                                                                    }
+                                                                    catch(RemoteException e)
+                                                                    {
+                                                                        throw new RuntimeException(e);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        unbindService(this);
+                                                                    }
+                                                                }
+                                                            }, BIND_AUTO_CREATE);
+                                                }
+                                                catch(ClassNotFoundException e)
+                                                {
+                                                    throw new RuntimeException(e);
+                                                  
+                                                }
+                                                return true;
+                                            }
+                                        });
+                                        ps.addItemFromInflater(p);
+                                    }
+                                }
+                                catch(RemoteException e)
+                                {
+                                    throw new RuntimeException(e);
+                                }
+                                finally
+                                {
+                                    unbindService(this);
+                                }
+                            }
+                        }, BIND_AUTO_CREATE);
+            }
+            catch(ClassNotFoundException e)
+            {
+               throw new RuntimeException(e);
             }
             
             cat.addItemFromInflater(ps); 

@@ -7,6 +7,7 @@ import java.util.Comparator;
 import java.util.List;
 
 import aethers.notebook.R;
+import android.app.Activity;
 import android.database.DataSetObserver;
 import android.view.View;
 import android.view.ViewGroup;
@@ -18,13 +19,13 @@ import android.widget.TextView;
 public class FileListAdapter
 implements ListAdapter
 {
-    private final FileChooser fileChooser;
+    private final Activity activity;
  
     private final List<File> files;
     
-    public FileListAdapter(FileChooser fileChooser, List<File> files)
+    public FileListAdapter(Activity activity, List<File> files)
     {
-        this.fileChooser = fileChooser;
+        this.activity = activity;
         ArrayList<File> ordered = new ArrayList<File>();
         ordered.addAll(files);
         Collections.sort(ordered, new Comparator<File>()
@@ -72,7 +73,7 @@ implements ListAdapter
     public View getView(int position, View convertView, ViewGroup parent) 
     {
         File f = files.get(position);
-        LinearLayout l = (LinearLayout)fileChooser.getLayoutInflater().inflate(
+        LinearLayout l = (LinearLayout)activity.getLayoutInflater().inflate(
                 R.layout.filechooseritem, null);
         ImageView i = (ImageView)l.findViewById(R.id.filechooseritem_icon);
         i.setImageResource(f.isDirectory() ? R.drawable.folder : R.drawable.file);

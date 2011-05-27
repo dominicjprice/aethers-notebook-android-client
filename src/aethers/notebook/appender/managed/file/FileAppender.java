@@ -4,6 +4,8 @@ import java.io.BufferedWriter;
 import java.io.FileWriter;
 import java.io.IOException;
 import java.io.Writer;
+import java.util.ArrayList;
+import java.util.List;
 
 import org.codehaus.jackson.JsonFactory;
 import org.codehaus.jackson.JsonGenerator;
@@ -11,6 +13,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 import aethers.notebook.R;
+import aethers.notebook.core.Action;
 import aethers.notebook.core.AppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
 
@@ -107,6 +110,17 @@ implements Runnable
                     i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
                     startActivity(i);
                 }
+
+                @Override
+                public List<Action> listActions() 
+                throws RemoteException 
+                {
+                    return new ArrayList<Action>();
+                }
+
+                @Override
+                public void doAction(Action action) 
+                throws RemoteException { /* No-op */ }
             };
     
     private final Object sync = new Object();

@@ -101,6 +101,17 @@
                 \"builtin\" : true,
                 \"deleted\" : false,
                 \"version\" : 1
+            },
+            {
+                \"uniqueID\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
+                \"name\" : \"Uploader Appender\",
+                \"description\" : \"Pushes log messages to a remote server.\",
+                \"serviceClass\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
+                \"configurable\" : true,
+                \"enabled\" : false,
+                \"builtin\" : true,
+                \"deleted\" : false,
+                \"version\" : 1
             }
         ]
     </string>
@@ -117,5 +128,19 @@
     
     <string name="FileAppender_Preferences_logfilePath">FileAppender.Preferences.logfilePath</string>
     <string name="FileAppender_Preferences_logfilePath_default">/aether.log</string>
+    
+    <!-- Uploader Appender Preferences -->
+    
+    <string name="UploaderAppender_Preferences_connectionType">UploaderAppender.Preferences.connectionType</string>
+    <string name="UploaderAppender_Preferences_connectionType_default">Manual</string>
+    
+    <string name="UploaderAppender_Preferences_url">UploaderAppender.Preferences.url</string>
+    <string name="UploaderAppender_Preferences_url_default"></string>
+    
+    <string name="UploaderAppender_Preferences_maxFileSize">UploaderAppender.Preferences.maxFileSize</string>
+    <string name="UploaderAppender_Preferences_maxFileSize_default">1024</string>
+    
+    <string name="UploaderAppender_Preferences_logDirectory">UploaderAppender.Preferences.logDirectory</string>
+    <string name="UploaderAppender_Preferences_logDirectory_default">/aether</string>
     
 </resources>

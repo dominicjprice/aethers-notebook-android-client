@@ -25,6 +25,7 @@
             android:label="@string/application_name">
     
         <activity android:name=".appender.managed.file.ConfigurationActivity" />
+        <activity android:name=".appender.managed.uploader.ConfigurationActivity" />
         <activity android:name=".logger.managed.wifi.ConfigurationActivity" />
         <activity android:name=".core.ui.ConfigurationActivity">
             <intent-filter>
@@ -32,11 +33,13 @@
                 <category android:name="android.intent.category.LAUNCHER" />
             </intent-filter>
         </activity>
+        <activity android:name=".core.ui.filechooser.DirectoryChooser" />
         <activity android:name=".core.ui.filechooser.FileChooser" />
             
         <service android:name=".core.CoreService" />
         
         <service android:name=".appender.managed.file.FileAppender" />
+        <service android:name=".appender.managed.uploader.UploaderAppender" />
         
         <service android:name=".logger.managed.celllocation.CellLocationLogger" />
         <service android:name=".logger.managed.dataconnectionstate.DataConnectionStateLogger" />
