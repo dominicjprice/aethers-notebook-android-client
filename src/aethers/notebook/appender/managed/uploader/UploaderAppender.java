@@ -28,7 +28,7 @@ import org.codehaus.jackson.node.ObjectNode;
 import aethers.notebook.R;
 import aethers.notebook.appender.managed.uploader.Configuration.ConnectionType;
 import aethers.notebook.core.Action;
-import aethers.notebook.core.AppenderService;
+import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
 import android.app.Service;
 import android.content.Intent;
@@ -59,8 +59,8 @@ implements Runnable
         actions.add(upload);
     }
     
-    private final AppenderService.Stub appenderServiceStub = 
-        new AppenderService.Stub()
+    private final ManagedAppenderService.Stub appenderServiceStub = 
+        new ManagedAppenderService.Stub()
         {
             @Override
             public void stop()

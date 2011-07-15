@@ -11,7 +11,7 @@ import org.codehaus.jackson.map.ObjectMapper;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Action;
-import aethers.notebook.core.AppenderService;
+import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.Configuration;
 import aethers.notebook.core.CoreService;
 import aethers.notebook.core.LoggerService;
@@ -134,7 +134,7 @@ extends PreferenceActivity
                         { 
                             try
                             {
-                                AppenderService s = AppenderService.Stub.asInterface(service);
+                                ManagedAppenderService s = ManagedAppenderService.Stub.asInterface(service);
                                 appenderConnectionPool.put(serviceClass, s);
                                 s.configure();
                             }
@@ -153,8 +153,8 @@ extends PreferenceActivity
     private Map<Class<?>, LoggerService> loggerConnectionPool = 
             Collections.synchronizedMap(new HashMap<Class<?>, LoggerService>());
     
-    private Map<Class<?>, AppenderService> appenderConnectionPool = 
-            Collections.synchronizedMap(new HashMap<Class<?>, AppenderService>());
+    private Map<Class<?>, ManagedAppenderService> appenderConnectionPool = 
+            Collections.synchronizedMap(new HashMap<Class<?>, ManagedAppenderService>());
     
     private List<ServiceConnection> serviceConnections = 
             Collections.synchronizedList(new ArrayList<ServiceConnection>());
@@ -408,7 +408,7 @@ extends PreferenceActivity
                             @Override
                             public void onServiceConnected(ComponentName name, IBinder service)
                             {
-                                AppenderService as = AppenderService.Stub.asInterface(service);
+                                ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
                                 try
                                 {
                                     List<Action> actions = as.listActions();
@@ -435,7 +435,7 @@ extends PreferenceActivity
                                                                 @Override
                                                                 public void onServiceConnected(ComponentName name, IBinder service) 
                                                                 {
-                                                                    AppenderService as = AppenderService.Stub.asInterface(service);
+                                                                    ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
                                                                     try
                                                                     {
                                                                         as.doAction(action);

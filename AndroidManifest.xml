@@ -36,7 +36,12 @@
         <activity android:name=".core.ui.filechooser.DirectoryChooser" />
         <activity android:name=".core.ui.filechooser.FileChooser" />
             
-        <service android:name=".core.CoreService" />
+        <service android:name=".core.CoreService">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.Log" />
+                <category android:name="aethers.notebook.category.Logger" />
+            </intent-filter>
+        </service>
         
         <service android:name=".appender.managed.file.FileAppender" />
         <service android:name=".appender.managed.uploader.UploaderAppender" />

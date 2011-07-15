@@ -1,6 +1,7 @@
 package aethers.notebook.core;
 
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
@@ -174,15 +175,35 @@ extends Service
         @Override
         public void log(LoggerServiceIdentifier identifier, byte[] data)
         throws RemoteException 
-        {    
+        {   
+            if(!configuration.isEnabled())
+                return;
+            
             final long timestamp = System.currentTimeMillis();
             synchronized(appenderSync)
             {
-                for(AppenderService s : activeAppenders)
-                {
+                for(ManagedAppenderService s : activeAppenders)
                     s.log(identifier, timestamp, locationListener.getCurrentLocation(), data);
-                }
+                for(UnmanagedAppenderService s : unmanagedAppenders.values())
+                    s.log(identifier, timestamp, locationListener.getCurrentLocation(), data);
             }
+        }
+
+        @Override
+        public void registerUnmanagedAppender(
+                AppenderServiceIdentifier identifier,
+                UnmanagedAppenderService service) 
+        throws RemoteException 
+        {
+            unmanagedAppenders.put(identifier.getUniqueID(), service);            
+        }
+
+        @Override
+        public void deregisterUnmanagedAppender(
+                AppenderServiceIdentifier identifier) 
+        throws RemoteException 
+        {
+            unmanagedAppenders.remove(identifier.getUniqueID());            
         }
     };
     
@@ -194,7 +215,10 @@ extends Service
     
     private volatile boolean running = false;
     
-    private List<AppenderService> activeAppenders = new ArrayList<AppenderService>();
+    private List<ManagedAppenderService> activeAppenders = new ArrayList<ManagedAppenderService>();
+    
+    private Map<String, UnmanagedAppenderService> unmanagedAppenders 
+            = Collections.synchronizedMap(new HashMap<String, UnmanagedAppenderService>());
     
     private Map<String, ServiceConnection> activeConnections = new HashMap<String, ServiceConnection>();
     
@@ -320,7 +344,7 @@ extends Service
     private void startStopAppenders()
     {
         final boolean loggingEnabled = configuration.isEnabled();
-        final ArrayList<AppenderService> appenders = new ArrayList<AppenderService>();
+        final ArrayList<ManagedAppenderService> appenders = new ArrayList<ManagedAppenderService>();
         
         for(final AppenderConfigurationHolder holder : configuration.getAppenderConfigurationHolders())
         {
@@ -330,7 +354,7 @@ extends Service
                         Class.forName(holder.getServiceClass())),
                         new ServiceConnection()
                         {
-                            private AppenderService appenderService;
+                            private ManagedAppenderService appenderService;
                             
                             @Override
                             public void onServiceDisconnected(ComponentName name)
@@ -345,7 +369,7 @@ extends Service
                             @Override
                             public void onServiceConnected(ComponentName name, IBinder service) 
                             { 
-                                AppenderService appenderService = AppenderService.Stub.asInterface(service);
+                                ManagedAppenderService appenderService = ManagedAppenderService.Stub.asInterface(service);
                                 try
                                 {
                                     if(holder.isEnabled() && loggingEnabled)

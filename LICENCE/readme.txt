@@ -1,5 +1,5 @@
 ++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++++
-This copyright and license notice covers the images folder.png and folder.png
+This copyright and license notice covers the images folder.png and file.png
 ************************************************************************
 
 TITLE:	Crystal Project Icons

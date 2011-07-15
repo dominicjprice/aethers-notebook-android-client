@@ -5,7 +5,7 @@ import aethers.notebook.core.LoggerServiceIdentifier;
 
 import android.location.Location;
 
-interface AppenderService
+interface ManagedAppenderService
 {
     void configure();
     
