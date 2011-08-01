@@ -5,6 +5,7 @@ import java.util.Collections;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+import java.util.TimeZone;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Configuration.AppenderConfigurationHolder;
@@ -179,7 +180,9 @@ extends Service
             if(!configuration.isEnabled())
                 return;
             
-            final long timestamp = System.currentTimeMillis();
+            final TimeStamp timestamp = new TimeStamp(
+                    System.currentTimeMillis(),
+                    TimeZone.getDefault().getID());
             synchronized(appenderSync)
             {
                 for(ManagedAppenderService s : activeAppenders)

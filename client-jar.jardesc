@@ -14,11 +14,13 @@
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{AethersNotebook.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{LoggerServiceIdentifier.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{AppenderServiceIdentifier.java"/>
+        <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{TimeStamp.java"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/AethersNotebook.aidl"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{LoggerService.java"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/AppenderServiceIdentifier.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/UnmanagedAppenderService.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/LoggerServiceIdentifier.aidl"/>
+        <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/TimeStamp.aidl"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{UnmanagedAppenderService.java"/>
     </selectedElements>
 </jardesc>

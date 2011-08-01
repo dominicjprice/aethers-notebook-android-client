@@ -16,6 +16,7 @@ import aethers.notebook.R;
 import aethers.notebook.core.Action;
 import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
+import aethers.notebook.core.TimeStamp;
 
 import android.app.Service;
 import android.content.Intent;
@@ -53,7 +54,7 @@ implements Runnable
                 @Override
                 public void log(
                         final LoggerServiceIdentifier identifier,
-                        final long timestamp,
+                        final TimeStamp timestamp,
                         final Location location,
                         final byte[] data)
                 throws RemoteException 
@@ -76,7 +77,7 @@ implements Runnable
                                     o2.put("uniqueID", identifier.getUniqueID());
                                     o2.put("version", identifier.getVersion());
                                     o.put("identifier", o2);
-                                    o.put("timestamp", timestamp);
+                                    o.putPOJO("timestamp", timestamp);
                                     o.putPOJO("location", location);
                                     o.put("data", data);
                                     m.writeTree(gen, o);
