@@ -100,4 +100,49 @@ extends ConfigurationTemplate
                 R.string.UploaderAppender_Preferences_logDirectory,
                 logDirectory.getAbsolutePath());
     }
+    
+    public boolean isDeleteUploadedFiles()
+    {
+        return getBoolean(
+                R.string.UploaderAppender_Preferences_deleteUploadedFiles,
+                R.string.UploaderAppender_Preferences_logDirectory_default);
+    }
+    
+    public void setDeleteUploadedFiles(boolean deleteUploadedFiles)
+    {
+        setBoolean(
+                R.string.UploaderAppender_Preferences_deleteUploadedFiles, 
+                deleteUploadedFiles);
+    }
+    
+    public int getMaxFiles()
+    {
+        
+        String s = getString(
+                R.string.UploaderAppender_Preferences_maxFiles,
+                R.string.UploaderAppender_Preferences_maxFiles_default);
+        return s == null || s.equals("")
+                ? -1
+                : Integer.parseInt(s);
+    }
+    
+    public void setMaxFiles(int maxFiles)
+    {
+        setString(R.string.UploaderAppender_Preferences_maxFiles,
+                maxFiles == -1
+                        ? ""
+                        : String.valueOf(maxFiles));
+    }
+    
+    public String getCustomHeader()
+    {
+        return getString(
+                R.string.UploaderAppender_Preferences_customHeader,
+                R.string.UploaderAppender_Preferences_customHeader_default);
+    }
+    
+    public void setCustomHeader(String customHeader)
+    {
+        setString(R.string.UploaderAppender_Preferences_customHeader, customHeader);
+    }
 }

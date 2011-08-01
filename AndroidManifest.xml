@@ -25,6 +25,7 @@
             android:label="@string/application_name">
     
         <activity android:name=".appender.managed.file.ConfigurationActivity" />
+        <activity android:name=".logger.managed.position.ConfigurationActivity" />
         <activity android:name=".appender.managed.uploader.ConfigurationActivity" />
         <activity android:name=".logger.managed.wifi.ConfigurationActivity" />
         <activity android:name=".core.ui.ConfigurationActivity">
@@ -48,6 +49,7 @@
         
         <service android:name=".logger.managed.celllocation.CellLocationLogger" />
         <service android:name=".logger.managed.dataconnectionstate.DataConnectionStateLogger" />
+        <service android:name=".logger.managed.position.PositionLogger" />
         <service android:name=".logger.managed.servicestate.ServiceStateLogger" />
         <service android:name=".logger.managed.signalstrength.SignalStrengthLogger" />
         <service android:name=".logger.managed.wifi.WifiLogger" />

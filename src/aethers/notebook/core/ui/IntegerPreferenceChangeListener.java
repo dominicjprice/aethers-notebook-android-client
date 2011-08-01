@@ -16,24 +16,40 @@ implements OnPreferenceChangeListener
     
     private final Context context;
     
+    private final boolean allowBlank;
+    
     public IntegerPreferenceChangeListener(
             int minimum,
             int maximum,
             String toastMessage,
             Context context)
     {
+        this(minimum, maximum, toastMessage, false, context);
+    }
+    
+    public IntegerPreferenceChangeListener(
+            int minimum,
+            int maximum,
+            String toastMessage,
+            boolean allowBlank,
+            Context context)
+    {
         this.minimum = minimum;
         this.maximum = maximum;
         this.toastMessage = toastMessage;
+        this.allowBlank = allowBlank;
         this.context = context;
-    }   
+    }
     
     @Override
     public boolean onPreferenceChange(Preference preference, Object newValue) 
     {
         try
         {
-            int val = Integer.parseInt((String)newValue);
+            String s = (String)newValue;
+            if(allowBlank && s.equals(""))
+                return true;
+            int val = Integer.parseInt(s);
             if(val < minimum || val > maximum)
                 throw new RuntimeException();
             return true;

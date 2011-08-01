@@ -2,15 +2,19 @@ package aethers.notebook.appender.managed.uploader;
 
 import java.io.BufferedOutputStream;
 import java.io.File;
+import java.io.FileFilter;
 import java.io.FileOutputStream;
-import java.io.FilenameFilter;
 import java.io.IOException;
 import java.io.OutputStreamWriter;
 import java.io.Writer;
-import java.net.URL;
+import java.net.URI;
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Collections;
+import java.util.Comparator;
 import java.util.List;
+import java.util.Timer;
+import java.util.TimerTask;
 import java.util.zip.GZIPOutputStream;
 
 import org.apache.http.HttpEntity;
@@ -26,10 +30,10 @@ import org.codehaus.jackson.map.ObjectMapper;
 import org.codehaus.jackson.node.ObjectNode;
 
 import aethers.notebook.R;
-import aethers.notebook.appender.managed.uploader.Configuration.ConnectionType;
 import aethers.notebook.core.Action;
 import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
+import aethers.notebook.util.Logger;
 import android.app.Service;
 import android.content.Intent;
 import android.content.SharedPreferences;
@@ -41,7 +45,6 @@ import android.os.IBinder;
 import android.os.Looper;
 import android.os.RemoteException;
 import android.telephony.TelephonyManager;
-import android.util.Log;
 
 public class UploaderAppender
 extends Service
@@ -50,13 +53,110 @@ implements Runnable
     private static final String ENCODING = "UTF-8";
     
     private static final ArrayList<Action> actions = new ArrayList<Action>();
+    private static final Action ACTION_UPLOAD = new Action(
+            "aethers.notebook.appender.managed.uploader.UploaderAppender.upload"); 
     static 
+    { 
+        ACTION_UPLOAD.setName("Upload");
+        ACTION_UPLOAD.setDescription("Upload all complete log files now");
+        actions.add(ACTION_UPLOAD);
+    }
+    
+    private static Logger logger = Logger.getLogger(UploaderAppender.class);
+    
+    private class OnPostFileComplete
+    implements Runnable
     {
-        Action upload = new Action(
-                "aethers.notebook.appender.managed.uploader.UploaderAppender.upload");
-        upload.setName("Upload");
-        upload.setDescription("Upload all complete log files now");
-        actions.add(upload);
+        public void run()
+        {
+            int maxFiles = configuration.getMaxFiles();
+            if(maxFiles < 1)
+            {
+                checkUploadConditions();
+                return;
+            }
+            FileFilter filter = new FileFilter()
+            {
+                @Override
+                public boolean accept(File pathname) 
+                {
+                    if(!pathname.isFile())
+                        return false;
+                    return pathname.getName().startsWith("aether")
+                        && pathname.getName().endsWith(".gz");
+                }
+            };
+            List<File> files = Arrays.asList(currentDirectory.listFiles(filter));
+            while(files.size() > maxFiles)
+            {
+                Collections.sort(files, new Comparator<File>()
+                {
+                    @Override
+                    public int compare(File object1, File object2) 
+                    {
+                        return new Long(object2.lastModified()).
+                                compareTo(new Long(object1.lastModified()));
+                    }
+                });
+                files.get(0).delete();
+                files = Arrays.asList(currentDirectory.listFiles(filter));
+            }
+            checkUploadConditions();
+        }
+    }
+    
+    private class Upload
+    implements Runnable
+    {
+        @Override
+        public void run() 
+        {
+            boolean delete = configuration.isDeleteUploadedFiles();
+            File uploaddir = new File(currentDirectory, "uploaded");
+            uploaddir.mkdir();
+            HttpClient client = new DefaultHttpClient();
+            File[] files = currentDirectory.listFiles(new FileFilter()
+            {
+                @Override
+                public boolean accept(File pathname) 
+                {
+                    if(!pathname.isFile())
+                        return false;
+                    return pathname.getName().startsWith("aether")
+                        && pathname.getName().endsWith(".gz");
+                }
+            });
+            try
+            {
+                URI uri = configuration.getUrl().toURI();
+                for(File f : files)
+                {
+                    HttpPost post = new HttpPost(uri);
+                    FileEntity reqEntity = new FileEntity(f, "application/x-gzip");
+                    reqEntity.setContentType("binary/octet-stream");
+                    reqEntity.setChunked(true);
+                    post.addHeader("X-AethersNotebook-Custom", 
+                            configuration.getCustomHeader());
+                    post.setEntity(reqEntity);
+                    HttpResponse response = client.execute(post);
+                    HttpEntity resEntity = response.getEntity();
+                    EntityUtils.toString(resEntity);
+                    resEntity.consumeContent();
+                    if(delete)
+                        f.delete();
+                    else
+                        f.renameTo(new File(uploaddir, f.getName()));
+                }
+            }
+            catch(Exception e)
+            {
+                logger.error(e.getMessage(), e);
+            }
+            finally
+            {
+                client.getConnectionManager().shutdown();
+            }
+        }
     }
     
     private final ManagedAppenderService.Stub appenderServiceStub = 
@@ -110,10 +210,7 @@ implements Runnable
                                 m.writeTree(gen, o);
                                 fileOut.write("\n");
                                 fileOut.flush();
-                                checkSize();
-                                List<File> ready = checkUploadConditions();
-                                if(ready.size() > 0)
-                                    upload(ready);
+                                checkFileSize();
                             }
                             catch(Exception e)
                             {
@@ -151,17 +248,8 @@ implements Runnable
             public void doAction(Action action) 
             throws RemoteException 
             {
-                File[] files = currentDirectory.listFiles(new FilenameFilter()
-                {
-                    @Override
-                    public boolean accept(File dir, String filename) 
-                    {
-                        Log.d("test", filename);
-                        return filename.endsWith(".gz");
-                    }
-                });
-                if(files != null && files.length > 0)
-                    upload(Arrays.asList(files));
+                if(action.getID().equals(ACTION_UPLOAD.getID()))
+                    handler.post(new Upload());
             }
         };
         
@@ -234,26 +322,12 @@ implements Runnable
     public void run() 
     {
         configuration = new Configuration(this);
-        synchronized(fileLockSync)
-        {
-            try
-            {
-                currentDirectory = configuration.getLogDirectory();
-                if(!currentDirectory.exists())
-                    currentDirectory.mkdirs();
-                currentFile = File.createTempFile("aether", "", currentDirectory);
-                fileOut = new OutputStreamWriter(new GZIPOutputStream(
-                        new BufferedOutputStream(new FileOutputStream(currentFile))), ENCODING);
-            }
-            catch(IOException e)
-            {
-                throw new RuntimeException(e);
-            }
-        }
+        prepareOutput();
+        Looper.prepare();
+        handler = new Handler();
         final OnSharedPreferenceChangeListener listener =
                 new OnSharedPreferenceChangeListener()
                 {
-                    
                     @Override
                     public void onSharedPreferenceChanged(
                             SharedPreferences sharedPreferences,
@@ -262,35 +336,60 @@ implements Runnable
                         if(!key.equals(getString(
                                 R.string.UploaderAppender_Preferences_logDirectory)))
                             return;
-                        synchronized(fileLockSync)
-                        {
-                            try
+                        handler.post(new Runnable()
+                        {                            
+                            @Override
+                            public void run() 
                             {
-                                fileOut.flush();
-                                fileOut.close();
-                                File oldDir = currentDirectory;
-                                currentDirectory = configuration.getLogDirectory();
-                                if(!currentDirectory.exists())
-                                    currentDirectory.mkdirs();
-                                currentFile.renameTo(new File(currentDirectory, currentFile.getName() + ".gz"));
-                                for(File f : oldDir.listFiles())
-                                    f.renameTo(new File(currentDirectory, f.getName()));
-                                currentFile = File.createTempFile("aether", "", currentDirectory);
-                                fileOut = new OutputStreamWriter(new GZIPOutputStream(
-                                        new BufferedOutputStream(new FileOutputStream(currentFile))), ENCODING);
+                                switchOutput();                                
                             }
-                            catch(IOException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                        }
+                        });
                     }
                 };
         configuration.registerChangeListener(listener);
-        Looper.prepare();
-        handler = new Handler();        
+        Timer t = new Timer(true);
+        t.scheduleAtFixedRate(new TimerTask()
+        {
+            private boolean wifiEnabled = wifiManager.isWifiEnabled();
+            @Override
+            public void run() 
+            {
+                boolean b = wifiEnabled;
+                wifiEnabled = wifiManager.isWifiEnabled();
+                if(wifiEnabled == b)
+                    checkUploadConditions();
+            }
+        }, 0, 1000);
         Looper.loop();
+        t.cancel();
         configuration.unregisterChangeListener(listener);
+        closeOutput();
+    }
+    
+    private void prepareOutput()
+    {
+        synchronized(fileLockSync)
+        {
+            try
+            {
+                currentDirectory = configuration.getLogDirectory();
+                if(!currentDirectory.exists())
+                    currentDirectory.mkdirs();
+                currentFile = File.createTempFile("aether", "", currentDirectory);
+                fileOut = new OutputStreamWriter(
+                                new BufferedOutputStream(
+                                        new GZIPOutputStream(
+                                                new FileOutputStream(currentFile))), ENCODING);
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
+            }
+        }
+    }
+    
+    private void closeOutput()
+    {
         synchronized(fileLockSync)
         {
             try
@@ -306,92 +405,66 @@ implements Runnable
             {
                 throw new RuntimeException(e);
             }
-        }    
+        }
     }
     
-    private void checkSize()
+    private void switchOutput()
     {
         synchronized(fileLockSync)
         {
-            if(currentFile.length() >= (configuration.getMaxFileSize() * 1024))
+            try
             {
-                try
-                {
-                    fileOut.flush();
-                    fileOut.close();
-                    currentFile.renameTo(new File(currentFile.getParentFile(), currentFile.getName() + ".gz"));
-                    currentFile = File.createTempFile("aether", "", currentDirectory);
-                    fileOut = new OutputStreamWriter(new GZIPOutputStream(
-                            new BufferedOutputStream(new FileOutputStream(currentFile))), ENCODING);
-                }
-                catch(Exception e)
-                {
-                    throw new RuntimeException(e);
-                }
+                fileOut.flush();
+                fileOut.close();
+                File oldDir = currentDirectory;
+                currentDirectory = configuration.getLogDirectory();
+                if(!currentDirectory.exists())
+                    currentDirectory.mkdirs();
+                currentFile.renameTo(new File(currentDirectory, currentFile.getName() + ".gz"));
+                for(File f : oldDir.listFiles())
+                    f.renameTo(new File(currentDirectory, f.getName()));
+                currentFile = File.createTempFile("aether", "", currentDirectory);
+                fileOut = new OutputStreamWriter(new GZIPOutputStream(
+                        new BufferedOutputStream(new FileOutputStream(currentFile))), ENCODING);
+            }
+            catch(IOException e)
+            {
+                throw new RuntimeException(e);
             }
         }
     }
     
-    private List<File> checkUploadConditions()
+    private void checkFileSize()
+    throws IOException
     {
-        ConnectionType ct = configuration.getConnectionType();
-        if(ct.equals(ConnectionType.Manual))
-            return new ArrayList<File>();
-        
-        File[] files = currentDirectory.listFiles(new FilenameFilter()
+        synchronized(fileLockSync)
         {
-            @Override
-            public boolean accept(File dir, String filename) 
-            {
-                return filename.endsWith(".gz");
-            }
-        });
-        if(files == null || files.length == 0)
-            return new ArrayList<File>();
-                
-        if((ct.equals(ConnectionType.Wifi) || ct.equals(ConnectionType.WifiAnd3G)) 
-                && wifiManager.isWifiEnabled()
-                && wifiManager.pingSupplicant())
-            return Arrays.asList(files);
-        
-        if(ct.equals(ConnectionType.WifiAnd3G)
-                && telephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED)
-            return Arrays.asList(files);
-        
-        return new ArrayList<File>();
+            if(currentFile.length() < configuration.getMaxFileSize())
+                return;
+            fileOut.flush();
+            fileOut.close();
+            currentFile.renameTo(new File(currentDirectory, currentFile.getName() + ".gz"));
+            currentFile = File.createTempFile("aether", "", currentDirectory);
+            fileOut = new OutputStreamWriter(new GZIPOutputStream(
+                    new BufferedOutputStream(new FileOutputStream(currentFile))), ENCODING);
+        }
+        handler.post(new OnPostFileComplete());
     }
     
-    private void upload(List<File> files)
+    private void checkUploadConditions()
     {
-        Log.d("test", "uploading");
-        HttpClient client = new DefaultHttpClient();
-        URL url = configuration.getUrl();
-        try
+        switch(configuration.getConnectionType())
         {
-            for(File f : files)
-            {
-                try 
-                {
-                    HttpPost httppost = new HttpPost(url.toURI());
-                    FileEntity reqEntity = new FileEntity(f, "application/x-gzip");
-                    reqEntity.setContentType("binary/octet-stream");
-                    reqEntity.setChunked(true);
-                    httppost.setEntity(reqEntity);
-                    HttpResponse response = client.execute(httppost);
-                    HttpEntity resEntity = response.getEntity();
-                    EntityUtils.toString(resEntity);
-                    resEntity.consumeContent();
-                    f.delete();
-                }
-                catch (Exception e) 
-                {
-                    Log.e("test", "OH NO!", e);
-                }
-            }
-        }
-        finally
-        {
-            client.getConnectionManager().shutdown();
+            case Manual : return;
+            case Wifi :
+                if(wifiManager.isWifiEnabled() && wifiManager.pingSupplicant())
+                    handler.post(new Upload());
+                return;
+            case WifiAnd3G :
+                if(wifiManager.isWifiEnabled() 
+                        || telephonyManager.getDataState() == TelephonyManager.DATA_CONNECTED)
+                    handler.post(new Upload());
+                return;
         }
     }
 }

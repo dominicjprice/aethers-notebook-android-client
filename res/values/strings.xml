@@ -37,6 +37,17 @@
                 \"version\" : 1
             },
             {
+                \"uniqueID\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
+                \"name\" : \"Position Logger\",
+                \"description\" : \"Logs position\",
+                \"serviceClass\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
+                \"configurable\" : true,
+                \"enabled\" : false,
+                \"builtin\" : true,
+                \"deleted\" : false,
+                \"version\" : 1
+            },
+            {
                 \"uniqueID\" : \"aethers.notebook.logger.managed.celllocation.CellLocationLogger\",
                 \"name\" : \"Cell Location Logger\",
                 \"description\" : \"Logs when the cell location changes.\",
@@ -124,6 +135,14 @@
     <string name="WifiLogger_Preferences_scanInterval">WifiLogger.Preferences.scanInterval</string>
     <string name="WifiLogger_Preferences_scanInterval_default">5</string>
     
+    <!-- Position Logger Preferences -->
+    
+    <string name="PositionLogger_Preferences_locationMinDistance">PositionLogger.Preferences.locationMinDistance</string>
+    <string name="PositionLogger_Preferences_locationMinDistance_default">10</string>
+    
+    <string name="PositionLogger_Preferences_locationMinTime">PositionLogger.Preferences.locationMinTime</string>
+    <string name="PositionLogger_Preferences_locationMinTime_default">60</string>
+    
     <!-- File Appender Preferences -->
     
     <string name="FileAppender_Preferences_logfilePath">FileAppender.Preferences.logfilePath</string>
@@ -142,5 +161,14 @@
     
     <string name="UploaderAppender_Preferences_logDirectory">UploaderAppender.Preferences.logDirectory</string>
     <string name="UploaderAppender_Preferences_logDirectory_default">/aether</string>
+    
+    <string name="UploaderAppender_Preferences_deleteUploadedFiles">UploaderAppender.Preferences.deleteUploadedFiles</string>
+    <string name="UploaderAppender_Preferences_deleteUploadedFiles_default">true</string>
+    
+    <string name="UploaderAppender_Preferences_maxFiles">UploaderAppender_Preferences_maxFiles</string>
+    <string name="UploaderAppender_Preferences_maxFiles_default">-1</string>
+    
+    <string name="UploaderAppender_Preferences_customHeader">UploaderAppender_Preferences_customHeader</string>
+    <string name="UploaderAppender_Preferences_customHeader_default"></string>
     
 </resources>

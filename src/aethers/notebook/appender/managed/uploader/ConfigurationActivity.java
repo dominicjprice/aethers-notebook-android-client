@@ -48,6 +48,15 @@ extends PreferenceActivity
                 1, Integer.MAX_VALUE, 
                 "Maximum must be a number greater than or equal to 1", this));
         
+        Preference maxFiles = 
+            findPreference(getString(R.string.UploaderAppender_Preferences_maxFiles));
+        maxFiles.setOnPreferenceChangeListener(
+                new IntegerPreferenceChangeListener(
+                        1, Integer.MAX_VALUE,
+                        "Leave blank for unlimited, otherwise must be a number greater than 1",
+                        true,
+                        this));
+        
         Preference dirPreference = findPreference(getString(R.string.UploaderAppender_Preferences_logDirectory));
         dirPreference.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
         {

@@ -23,7 +23,10 @@ implements Runnable
             {
                 @Override
                 public void configure()
-                throws RemoteException { /* Noop */ }
+                throws RemoteException 
+                {  
+                    PushLogger.this.configure();
+                }
         
                 @Override
                 public boolean isRunning() 
@@ -143,6 +146,11 @@ implements Runnable
     }
     
     protected void postLogging(T t)
+    {
+        
+    }
+    
+    protected void configure()
     {
         
     }
