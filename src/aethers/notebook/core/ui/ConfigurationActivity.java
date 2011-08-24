@@ -224,7 +224,7 @@ extends PreferenceActivity
     {
         final Configuration conf = new Configuration(this);
         final List<LoggerConfigurationHolder> loggers = conf.getLoggerConfigurationHolders();
-        PreferenceCategory cat = (PreferenceCategory)findPreference(
+        final PreferenceCategory cat = (PreferenceCategory)findPreference(
                 getString(R.string.Preferences_category_loggers));
         
         Collections.sort(loggers, new Comparator<LoggerConfigurationHolder>()
@@ -243,7 +243,7 @@ extends PreferenceActivity
             if(holder.isDeleted())
                 continue;
             
-            PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
+            final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
             ps.setTitle(holder.getName());
             ps.setSummary(holder.getDescription());
                         
@@ -303,6 +303,24 @@ extends PreferenceActivity
             {
                 NonPersistingButtonPreference remove = new NonPersistingButtonPreference(this);
                 remove.setTitle("Remove");
+                remove.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) 
+                    {
+                        List<LoggerConfigurationHolder> hs = configuration.getLoggerConfigurationHolders();
+                        for(LoggerConfigurationHolder h : hs)
+                            if(h.equals(holder))
+                            {
+                                h.setDeleted(true);
+                                break;
+                            }
+                        configuration.setLoggerConfigurationHolders(hs);
+                        cat.removePreference(ps);
+                        ps.getDialog().dismiss();
+                        return true;
+                    }
+                });
                 ps.addItemFromInflater(remove);
             }
             
@@ -314,7 +332,7 @@ extends PreferenceActivity
     {
         final Configuration conf = new Configuration(this);
         final List<AppenderConfigurationHolder> appenders = conf.getAppenderConfigurationHolders();
-        PreferenceCategory cat = (PreferenceCategory)findPreference(
+        final PreferenceCategory cat = (PreferenceCategory)findPreference(
                 getString(R.string.Preferences_category_appenders));
         
         Collections.sort(appenders, new Comparator<AppenderConfigurationHolder>()
@@ -393,6 +411,24 @@ extends PreferenceActivity
             {
                 NonPersistingButtonPreference remove = new NonPersistingButtonPreference(this);
                 remove.setTitle("Remove");
+                remove.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                {
+                    @Override
+                    public boolean onPreferenceClick(Preference preference) 
+                    {
+                        List<AppenderConfigurationHolder> hs = configuration.getAppenderConfigurationHolders();
+                        for(AppenderConfigurationHolder h : hs)
+                            if(h.equals(holder))
+                            {
+                                h.setDeleted(true);
+                                break;
+                            }
+                        configuration.setAppenderConfigurationHolders(hs);
+                        cat.removePreference(ps);
+                        ps.getDialog().dismiss();
+                        return true;
+                    }
+                });
                 ps.addItemFromInflater(remove);
             }
             

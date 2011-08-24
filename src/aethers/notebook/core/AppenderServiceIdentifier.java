@@ -31,6 +31,8 @@ implements Parcelable
     
     private String description;
     
+    private String packageName;
+    
     private String serviceClass;
     
     private boolean configurable;
@@ -50,6 +52,7 @@ implements Parcelable
         this.description = in.readString();
         this.serviceClass = in.readString();
         this.version = in.readInt();
+        this.packageName = in.readString();
     }    
     
     @Override
@@ -66,6 +69,7 @@ implements Parcelable
         dest.writeString(description);
         dest.writeString(serviceClass);
         dest.writeInt(version);
+        dest.writeString(packageName);
     }
     
     public String getUniqueID()
@@ -91,6 +95,16 @@ implements Parcelable
     public void setDescription(String description) 
     {
         this.description = description;
+    }
+    
+    public String getPackageName()
+    {
+        return packageName;
+    }
+    
+    public void setPackageName(String packageName)
+    {
+        this.packageName = packageName;
     }
 
     public String getServiceClass() 

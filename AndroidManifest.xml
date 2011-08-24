@@ -39,8 +39,7 @@
             
         <service android:name=".core.CoreService">
             <intent-filter>
-                <action android:name="aethers.notebook.action.Log" />
-                <category android:name="aethers.notebook.category.Logger" />
+                <action android:name="aethers.notebook.action.ACTION_CONNECT" />
             </intent-filter>
         </service>
         

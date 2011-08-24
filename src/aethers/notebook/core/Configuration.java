@@ -77,6 +77,7 @@ extends ConfigurationTemplate
     public Configuration(Context context) 
     {
         super(context, SHARED_PREFERENCES_NAME);
+        //getSharedPreferences().edit().clear().commit();
     }    
     
     public boolean isEnabled()
@@ -130,6 +131,23 @@ extends ConfigurationTemplate
         }
     }
     
+    public void setLoggerConfigurationHolders(List<LoggerConfigurationHolder> list)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        SharedPreferences.Editor editor = getSharedPreferences().edit();
+        try
+        {
+            editor.putString(
+                    getContext().getString(R.string.Preferences_loggers),
+                    mapper.writeValueAsString(list));
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        editor.commit();
+    }
+    
     public List<AppenderConfigurationHolder> getAppenderConfigurationHolders()
     {
         if(shouldUpdateAppenders())
@@ -147,6 +165,23 @@ extends ConfigurationTemplate
         {
             throw new RuntimeException(e);
         }
+    }
+    
+    public void setAppenderConfigurationHolders(List<AppenderConfigurationHolder> list)
+    {
+        ObjectMapper mapper = new ObjectMapper();
+        SharedPreferences.Editor editor = getSharedPreferences().edit();
+        try
+        {
+            editor.putString(
+                    getContext().getString(R.string.Preferences_appenders),
+                    mapper.writeValueAsString(list));
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+        editor.commit();
     }
     
     private boolean shouldUpdateLoggers()
@@ -186,6 +221,7 @@ extends ConfigurationTemplate
                     o.setDeleted(c.isDeleted());
                     o.setDescription(c.getDescription());
                     o.setName(c.getName());
+                    o.setPackageName(c.getPackageName());
                     o.setServiceClass(c.getServiceClass());
                 }
                 else
@@ -248,6 +284,7 @@ extends ConfigurationTemplate
                     o.setDeleted(c.isDeleted());
                     o.setDescription(c.getDescription());
                     o.setName(c.getName());
+                    o.setPackageName(c.getPackageName());
                     o.setServiceClass(c.getServiceClass());
                 }
                 else

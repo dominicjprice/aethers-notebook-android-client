@@ -29,6 +29,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.wifi.WifiLogger\",
                 \"name\" : \"Wifi Logger\",
                 \"description\" : \"Logs the results of scanning Wifi access points\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.wifi.WifiLogger\",
                 \"configurable\" : true,
                 \"enabled\" : false,
@@ -40,6 +41,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
                 \"name\" : \"Position Logger\",
                 \"description\" : \"Logs position\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
                 \"configurable\" : true,
                 \"enabled\" : false,
@@ -51,6 +53,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.celllocation.CellLocationLogger\",
                 \"name\" : \"Cell Location Logger\",
                 \"description\" : \"Logs when the cell location changes.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.celllocation.CellLocationLogger\",
                 \"configurable\" : false,
                 \"enabled\" : false,
@@ -62,6 +65,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.dataconnectionstate.DataConnectionStateLogger\",
                 \"name\" : \"Data Connection State Logger\",
                 \"description\" : \"Logs when the data connection state changes.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.dataconnectionstate.DataConnectionStateLogger\",
                 \"configurable\" : false,
                 \"enabled\" : false,
@@ -73,6 +77,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.servicestate.ServiceStateLogger\",
                 \"name\" : \"Service State Logger\",
                 \"description\" : \"Logs when the service state changes.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.servicestate.ServiceStateLogger\",
                 \"configurable\" : false,
                 \"enabled\" : false,
@@ -84,6 +89,7 @@
                 \"uniqueID\" : \"aethers.notebook.logger.managed.signalstrength.SignalStrengthLogger\",
                 \"name\" : \"Signal Strength Logger\",
                 \"description\" : \"Logs when the signal strength changes.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.logger.managed.signalstrength.SignalStrengthLogger\",
                 \"configurable\" : false,
                 \"enabled\" : false,
@@ -106,6 +112,7 @@
                 \"uniqueID\" : \"aethers.notebook.appender.managed.file.FileAppender\",
                 \"name\" : \"File Appender\",
                 \"description\" : \"Appends log messages to the filesystem.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.appender.managed.file.FileAppender\",
                 \"configurable\" : true,
                 \"enabled\" : false,
@@ -117,6 +124,7 @@
                 \"uniqueID\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
                 \"name\" : \"Uploader Appender\",
                 \"description\" : \"Pushes log messages to a remote server.\",
+                \"packageName\" : \"aethers.notebook\",
                 \"serviceClass\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
                 \"configurable\" : true,
                 \"enabled\" : false,
@@ -129,6 +137,11 @@
     
     <string name="Preferences_appenders_version">Preferences.appenders.default</string>
     <string name="Preferences_appenders_version_default">1</string>
+    
+    <!-- Logcat Logger Preferences -->
+    
+    <string name="LogcatLogger_Preferences_format">LogcatLogger.Preferences.format</string>
+    <string name="LogcatLogger_Preferences_format_default">Brief</string>
     
     <!-- Wifi Logger Preferences -->
     
