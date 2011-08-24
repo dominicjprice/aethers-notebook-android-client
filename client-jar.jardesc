@@ -12,15 +12,19 @@
     </manifest>
     <selectedElements exportClassFiles="true" exportJavaFiles="true" exportOutputFolder="false">
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{AethersNotebook.java"/>
+        <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{Action.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{LoggerServiceIdentifier.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{AppenderServiceIdentifier.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/src&lt;aethers.notebook.core{TimeStamp.java"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/AethersNotebook.aidl"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{LoggerService.java"/>
+        <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/Action.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/AppenderServiceIdentifier.aidl"/>
+        <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/ManagedAppenderService.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/UnmanagedAppenderService.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/LoggerServiceIdentifier.aidl"/>
         <file path="/Aether's Notebook Android Client/src/aethers/notebook/core/TimeStamp.aidl"/>
+        <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{ManagedAppenderService.java"/>
         <javaElement handleIdentifier="=Aether's Notebook Android Client/gen&lt;aethers.notebook.core{UnmanagedAppenderService.java"/>
     </selectedElements>
 </jardesc>

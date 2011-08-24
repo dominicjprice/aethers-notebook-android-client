@@ -432,87 +432,84 @@ extends PreferenceActivity
                 ps.addItemFromInflater(remove);
             }
             
-            try
-            {
-                bindService(
-                        new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
-                        new ServiceConnection()
+            
+            Intent i = new Intent();
+            i.setComponent(new ComponentName(holder.getPackageName(), holder.getServiceClass()));
+            bindService(
+                    i,
+                    new ServiceConnection()
+                    {
+                        @Override
+                        public void onServiceDisconnected(ComponentName name) { }
+                        
+                        @Override
+                        public void onServiceConnected(ComponentName name, IBinder service)
                         {
-                            @Override
-                            public void onServiceDisconnected(ComponentName name) { }
-                            
-                            @Override
-                            public void onServiceConnected(ComponentName name, IBinder service)
+                            ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                            try
                             {
-                                ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
-                                try
+                                List<Action> actions = as.listActions();
+                                if(actions == null || actions.size() == 0)
+                                    return;
+                                for(final Action action : actions)
                                 {
-                                    List<Action> actions = as.listActions();
-                                    if(actions == null || actions.size() == 0)
-                                        return;
-                                    for(final Action action : actions)
+                                    NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                                    p.setTitle(action.getName());
+                                    p.setSummary(action.getDescription());
+                                    p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
                                     {
-                                        NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
-                                        p.setTitle(action.getName());
-                                        p.setSummary(action.getDescription());
-                                        p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                                        @Override
+                                        public boolean onPreferenceClick(Preference preference) 
                                         {
-                                            @Override
-                                            public boolean onPreferenceClick(Preference preference) 
+                                            try
                                             {
-                                                try
-                                                {
-                                                    bindService(new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
-                                                            new ServiceConnection()
+                                                bindService(new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
+                                                        new ServiceConnection()
+                                                        {
+                                                            @Override
+                                                            public void onServiceDisconnected(ComponentName name) { }
+                                                            
+                                                            @Override
+                                                            public void onServiceConnected(ComponentName name, IBinder service) 
                                                             {
-                                                                @Override
-                                                                public void onServiceDisconnected(ComponentName name) { }
-                                                                
-                                                                @Override
-                                                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                                                ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                                                                try
                                                                 {
-                                                                    ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
-                                                                    try
-                                                                    {
-                                                                        as.doAction(action);
-                                                                    }
-                                                                    catch(RemoteException e)
-                                                                    {
-                                                                        throw new RuntimeException(e);
-                                                                    }
-                                                                    finally
-                                                                    {
-                                                                        unbindService(this);
-                                                                    }
+                                                                    as.doAction(action);
                                                                 }
-                                                            }, BIND_AUTO_CREATE);
-                                                }
-                                                catch(ClassNotFoundException e)
-                                                {
-                                                    throw new RuntimeException(e);
-                                                  
-                                                }
-                                                return true;
+                                                                catch(RemoteException e)
+                                                                {
+                                                                    throw new RuntimeException(e);
+                                                                }
+                                                                finally
+                                                                {
+                                                                    unbindService(this);
+                                                                }
+                                                            }
+                                                        }, BIND_AUTO_CREATE);
                                             }
-                                        });
-                                        ps.addItemFromInflater(p);
-                                    }
-                                }
-                                catch(RemoteException e)
-                                {
-                                    throw new RuntimeException(e);
-                                }
-                                finally
-                                {
-                                    unbindService(this);
+                                            catch(ClassNotFoundException e)
+                                            {
+                                                throw new RuntimeException(e);
+                                              
+                                            }
+                                            return true;
+                                        }
+                                    });
+                                    ps.addItemFromInflater(p);
                                 }
                             }
-                        }, BIND_AUTO_CREATE);
-            }
-            catch(ClassNotFoundException e)
-            {
-               throw new RuntimeException(e);
-            }
+                            catch(RemoteException e)
+                            {
+                                throw new RuntimeException(e);
+                            }
+                            finally
+                            {
+                                unbindService(this);
+                            }
+                        }
+                    }, BIND_AUTO_CREATE);
+            
             
             cat.addItemFromInflater(ps); 
         }
