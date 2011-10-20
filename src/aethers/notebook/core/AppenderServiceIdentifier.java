@@ -53,6 +53,7 @@ implements Parcelable
         this.serviceClass = in.readString();
         this.version = in.readInt();
         this.packageName = in.readString();
+        this.configurable = in.readInt() == 1;
     }    
     
     @Override
@@ -70,6 +71,7 @@ implements Parcelable
         dest.writeString(serviceClass);
         dest.writeInt(version);
         dest.writeString(packageName);
+        dest.writeInt(configurable ? 1 : 0);
     }
     
     public String getUniqueID()

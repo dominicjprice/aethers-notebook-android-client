@@ -37,9 +37,9 @@ extends PreferenceActivity
     private class LoggerConfigureOnClickListener
     implements Preference.OnPreferenceClickListener
     {
-        private final Class<?> serviceClass;
+        private final String serviceClass;
         
-        public LoggerConfigureOnClickListener(Class<?> serviceClass)
+        public LoggerConfigureOnClickListener(String serviceClass)
         {
             this.serviceClass = serviceClass;
         }
@@ -61,8 +61,10 @@ extends PreferenceActivity
             }
             
             ServiceConnection conn;
+            Intent i = new Intent();
+            i.setComponent(ComponentName.unflattenFromString(serviceClass));
             ConfigurationActivity.this.bindService(
-                    new Intent(ConfigurationActivity.this, serviceClass),
+                    i,
                     conn = new ServiceConnection()
                     {
                         @Override
@@ -95,9 +97,9 @@ extends PreferenceActivity
     private class AppenderConfigureOnClickListener
     implements Preference.OnPreferenceClickListener
     {
-        private final Class<?> serviceClass;
+        private final String serviceClass;
         
-        public AppenderConfigureOnClickListener(Class<?> serviceClass)
+        public AppenderConfigureOnClickListener(String serviceClass)
         {
             this.serviceClass = serviceClass;
         }
@@ -105,11 +107,11 @@ extends PreferenceActivity
         @Override
         public boolean onPreferenceClick(Preference p) 
         {
-            if(loggerConnectionPool.containsKey(serviceClass))
+            if(appenderConnectionPool.containsKey(serviceClass))
             {
                 try
                 {
-                    loggerConnectionPool.get(serviceClass).configure();
+                    appenderConnectionPool.get(serviceClass).configure();
                 }
                 catch(RemoteException e)
                 {
@@ -119,8 +121,10 @@ extends PreferenceActivity
             }
             
             ServiceConnection conn;
+            Intent i = new Intent();
+            i.setComponent(ComponentName.unflattenFromString(serviceClass));
             ConfigurationActivity.this.bindService(
-                    new Intent(ConfigurationActivity.this, serviceClass),
+                    i,
                     conn = new ServiceConnection()
                     {
                         @Override
@@ -150,11 +154,11 @@ extends PreferenceActivity
         }   
     }
     
-    private Map<Class<?>, LoggerService> loggerConnectionPool = 
-            Collections.synchronizedMap(new HashMap<Class<?>, LoggerService>());
+    private Map<String, LoggerService> loggerConnectionPool = 
+            Collections.synchronizedMap(new HashMap<String, LoggerService>());
     
-    private Map<Class<?>, ManagedAppenderService> appenderConnectionPool = 
-            Collections.synchronizedMap(new HashMap<Class<?>, ManagedAppenderService>());
+    private Map<String, ManagedAppenderService> appenderConnectionPool = 
+            Collections.synchronizedMap(new HashMap<String, ManagedAppenderService>());
     
     private List<ServiceConnection> serviceConnections = 
             Collections.synchronizedList(new ArrayList<ServiceConnection>());
@@ -286,16 +290,11 @@ extends PreferenceActivity
             {
                 NonPersistingButtonPreference configure = new NonPersistingButtonPreference(this);
                 configure.setTitle("Configure");
-                try
-                {
-                    configure.setOnPreferenceClickListener(
-                            new LoggerConfigureOnClickListener(
-                                    Class.forName(holder.getServiceClass())));
-                }
-                catch(ClassNotFoundException e)
-                {
-                    throw new RuntimeException(e);
-                }         
+                ComponentName cn = new ComponentName(
+                        holder.getPackageName(), holder.getServiceClass());
+                configure.setOnPreferenceClickListener(
+                        new LoggerConfigureOnClickListener(
+                                cn.flattenToString()));
                 ps.addItemFromInflater(configure);
             }
             
@@ -394,16 +393,12 @@ extends PreferenceActivity
             {
                 NonPersistingButtonPreference configure = new NonPersistingButtonPreference(this);
                 configure.setTitle("Configure");
-                try
-                {
-                    configure.setOnPreferenceClickListener(
+                ComponentName cn = new ComponentName(
+                        holder.getPackageName(), holder.getServiceClass());
+                configure.setOnPreferenceClickListener(
                             new AppenderConfigureOnClickListener(
-                                    Class.forName(holder.getServiceClass())));
-                }
-                catch(ClassNotFoundException e)
-                {
-                    throw new RuntimeException(e);
-                }         
+                                    cn.flattenToString()));
+                         
                 ps.addItemFromInflater(configure);
             }
             
@@ -461,38 +456,34 @@ extends PreferenceActivity
                                         @Override
                                         public boolean onPreferenceClick(Preference preference) 
                                         {
-                                            try
-                                            {
-                                                bindService(new Intent(ConfigurationActivity.this, Class.forName(holder.getServiceClass())),
-                                                        new ServiceConnection()
+                                            
+                                            Intent i = new Intent();
+                                            i.setComponent(new ComponentName(
+                                                    holder.getPackageName(), holder.getServiceClass()));
+                                            bindService(i,
+                                                    new ServiceConnection()
+                                                    {
+                                                        @Override
+                                                        public void onServiceDisconnected(ComponentName name) { }
+                                                        
+                                                        @Override
+                                                        public void onServiceConnected(ComponentName name, IBinder service) 
                                                         {
-                                                            @Override
-                                                            public void onServiceDisconnected(ComponentName name) { }
-                                                            
-                                                            @Override
-                                                            public void onServiceConnected(ComponentName name, IBinder service) 
+                                                            ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                                                            try
                                                             {
-                                                                ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
-                                                                try
-                                                                {
-                                                                    as.doAction(action);
-                                                                }
-                                                                catch(RemoteException e)
-                                                                {
-                                                                    throw new RuntimeException(e);
-                                                                }
-                                                                finally
-                                                                {
-                                                                    unbindService(this);
-                                                                }
+                                                                as.doAction(action);
                                                             }
-                                                        }, BIND_AUTO_CREATE);
-                                            }
-                                            catch(ClassNotFoundException e)
-                                            {
-                                                throw new RuntimeException(e);
-                                              
-                                            }
+                                                            catch(RemoteException e)
+                                                            {
+                                                                throw new RuntimeException(e);
+                                                            }
+                                                            finally
+                                                            {
+                                                                unbindService(this);
+                                                            }
+                                                        }
+                                                    }, BIND_AUTO_CREATE);
                                             return true;
                                         }
                                     });

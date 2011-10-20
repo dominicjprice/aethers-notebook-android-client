@@ -178,10 +178,10 @@
     <string name="UploaderAppender_Preferences_deleteUploadedFiles">UploaderAppender.Preferences.deleteUploadedFiles</string>
     <string name="UploaderAppender_Preferences_deleteUploadedFiles_default">true</string>
     
-    <string name="UploaderAppender_Preferences_maxFiles">UploaderAppender_Preferences_maxFiles</string>
+    <string name="UploaderAppender_Preferences_maxFiles">UploaderAppender.Preferences.maxFiles</string>
     <string name="UploaderAppender_Preferences_maxFiles_default">-1</string>
     
-    <string name="UploaderAppender_Preferences_customHeader">UploaderAppender_Preferences_customHeader</string>
+    <string name="UploaderAppender_Preferences_customHeader">UploaderAppender.Preferences.customHeader</string>
     <string name="UploaderAppender_Preferences_customHeader_default"></string>
     
 </resources>
