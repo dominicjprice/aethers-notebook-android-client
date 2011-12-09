@@ -142,6 +142,8 @@ extends Service
                 locationManager.removeUpdates(this);
             
             currentProvider = best;
+            if(currentProvider == null)
+                return;
             locationManager.requestLocationUpdates(
                     currentProvider, 
                     configuration.getLocationMinimumTime(),
