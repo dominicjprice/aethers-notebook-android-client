@@ -76,9 +76,11 @@ extends Service
                 SharedPreferences sharedPreferences,
                 String key) 
         {
-            if(key.equals(getString(R.string.Preferences_logLocation)))
+            if(key.equals(getString(R.string.Preferences_logLocation))
+                    || key.equals(getString(R.string.Preferences_enabled)))
             {
-                if(configuration.isLocationLoggingEnabled())
+                if(configuration.isLocationLoggingEnabled()
+                        && configuration.isEnabled())
                     enable();
                 else
                     locationManager.removeUpdates(this);
