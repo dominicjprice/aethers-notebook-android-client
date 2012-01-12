@@ -31,6 +31,7 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Action;
+import aethers.notebook.core.AppenderServiceIdentifier;
 import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
 import aethers.notebook.core.TimeStamp;
@@ -52,6 +53,16 @@ extends Service
 implements Runnable
 {
     private static final String ENCODING = "UTF-8";
+    
+    private static final AppenderServiceIdentifier IDENTIFIER = 
+            new AppenderServiceIdentifier("aethers.notebook.appender.managed.uploader.UploaderAppender");
+    static
+    {
+        IDENTIFIER.setConfigurable(true);
+        IDENTIFIER.setDescription("Pushes log messages to a remote server.");
+        IDENTIFIER.setName("Uploader Appender");
+        IDENTIFIER.setVersion(1);
+    }
     
     private static final ArrayList<Action> actions = new ArrayList<Action>();
     private static final Action ACTION_UPLOAD = new Action(
@@ -163,6 +174,12 @@ implements Runnable
     private final ManagedAppenderService.Stub appenderServiceStub = 
         new ManagedAppenderService.Stub()
         {
+            @Override
+            public AppenderServiceIdentifier getIdentifier()
+            {
+                return IDENTIFIER;
+            }
+        
             @Override
             public void stop()
             throws RemoteException 

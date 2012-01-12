@@ -31,13 +31,9 @@ implements Parcelable
     
     private String description;
     
-    private String packageName;
-    
-    private String serviceClass;
+    private int version;
     
     private boolean configurable;
-    
-    private int version;
     
     @JsonCreator
     public AppenderServiceIdentifier(@JsonProperty("uniqueID") String uniqueID)
@@ -50,9 +46,7 @@ implements Parcelable
         this.uniqueID = in.readString();
         this.name = in.readString();
         this.description = in.readString();
-        this.serviceClass = in.readString();
         this.version = in.readInt();
-        this.packageName = in.readString();
         this.configurable = in.readInt() == 1;
     }    
     
@@ -68,9 +62,7 @@ implements Parcelable
         dest.writeString(uniqueID);
         dest.writeString(name);
         dest.writeString(description);
-        dest.writeString(serviceClass);
         dest.writeInt(version);
-        dest.writeString(packageName);
         dest.writeInt(configurable ? 1 : 0);
     }
     
@@ -99,24 +91,14 @@ implements Parcelable
         this.description = description;
     }
     
-    public String getPackageName()
+    public int getVersion()
     {
-        return packageName;
+        return version;
     }
     
-    public void setPackageName(String packageName)
+    public void setVersion(int version)
     {
-        this.packageName = packageName;
-    }
-
-    public String getServiceClass() 
-    {
-        return serviceClass;
-    }
-
-    public void setServiceClass(String serviceClass) 
-    {
-        this.serviceClass = serviceClass;
+        this.version = version;
     }
     
     public boolean isConfigurable()
@@ -129,24 +111,14 @@ implements Parcelable
         this.configurable = configurable;
     }
     
-    public int getVersion()
-    {
-        return version;
-    }
-    
-    public void setVersion(int version)
-    {
-        this.version = version;
-    }
-    
     @Override
     public boolean equals(Object o) 
     {
         if(!(o instanceof AppenderServiceIdentifier))
             return false;
         AppenderServiceIdentifier i = (AppenderServiceIdentifier)o;
-        if(uniqueID == null)
-            return i.getUniqueID() == null;
+        if(uniqueID == null || i.getUniqueID() == null)
+            return false;
         return uniqueID.equals(i.getUniqueID())
                  && version == i.getVersion();
     }

@@ -14,6 +14,7 @@ import org.codehaus.jackson.node.ObjectNode;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Action;
+import aethers.notebook.core.AppenderServiceIdentifier;
 import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.LoggerServiceIdentifier;
 import aethers.notebook.core.TimeStamp;
@@ -32,9 +33,25 @@ public class FileAppender
 extends Service
 implements Runnable
 {
+    private static final AppenderServiceIdentifier IDENTIFIER = 
+            new AppenderServiceIdentifier("aethers.notebook.appender.managed.file.FileAppender");
+    static
+    {
+        IDENTIFIER.setConfigurable(true);
+        IDENTIFIER.setDescription("Appends log messages to the filesystem.");
+        IDENTIFIER.setName("File Appender");
+        IDENTIFIER.setVersion(1);
+    }
+    
     private final ManagedAppenderService.Stub appenderServiceStub = 
             new ManagedAppenderService.Stub()
             {
+                @Override
+                public AppenderServiceIdentifier getIdentifier()
+                {
+                    return IDENTIFIER;
+                }
+        
                 @Override
                 public void stop()
                 throws RemoteException 

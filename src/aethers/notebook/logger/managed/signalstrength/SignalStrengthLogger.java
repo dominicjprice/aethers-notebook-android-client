@@ -18,7 +18,6 @@ extends PushLogger<PhoneStateListener>
         IDENTIFIER.setConfigurable(false);
         IDENTIFIER.setDescription("Logs when the signal strength changes.");
         IDENTIFIER.setName("Signal Strength Logger");
-        IDENTIFIER.setServiceClass(SignalStrengthLogger.class.getName());
         IDENTIFIER.setVersion(1);
     }
 
@@ -63,5 +62,11 @@ extends PushLogger<PhoneStateListener>
     protected void postLogging(PhoneStateListener psl) 
     {
         telephonyManager.listen(psl, PhoneStateListener.LISTEN_NONE);
+    }
+    
+    @Override
+    protected LoggerServiceIdentifier getIdentifier() 
+    {
+        return IDENTIFIER;
     }
 }

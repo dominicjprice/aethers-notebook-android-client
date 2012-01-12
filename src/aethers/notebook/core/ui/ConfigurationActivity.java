@@ -6,17 +6,18 @@ import java.util.Comparator;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
-
-import org.codehaus.jackson.map.ObjectMapper;
+import java.util.Map.Entry;
 
 import aethers.notebook.R;
 import aethers.notebook.core.Action;
+import aethers.notebook.core.AppenderServiceIdentifier;
+import aethers.notebook.core.LoggerServiceIdentifier;
 import aethers.notebook.core.ManagedAppenderService;
 import aethers.notebook.core.Configuration;
 import aethers.notebook.core.CoreService;
 import aethers.notebook.core.LoggerService;
-import aethers.notebook.core.Configuration.AppenderConfigurationHolder;
-import aethers.notebook.core.Configuration.LoggerConfigurationHolder;
+import aethers.notebook.core.PluginManager;
+import aethers.notebook.util.Logger;
 import android.content.ComponentName;
 import android.content.Intent;
 import android.content.ServiceConnection;
@@ -34,6 +35,8 @@ import android.preference.PreferenceScreen;
 public class ConfigurationActivity
 extends PreferenceActivity
 {    
+    private static Logger logger = Logger.getLogger(ConfigurationActivity.class);
+    
     private class LoggerConfigureOnClickListener
     implements Preference.OnPreferenceClickListener
     {
@@ -227,282 +230,316 @@ extends PreferenceActivity
     private void setupLoggerPreferences()
     {
         final Configuration conf = new Configuration(this);
-        final List<LoggerConfigurationHolder> loggers = conf.getLoggerConfigurationHolders();
+        final List<String> enabledLoggers = conf.getEnabledLoggers();
         final PreferenceCategory cat = (PreferenceCategory)findPreference(
                 getString(R.string.Preferences_category_loggers));
         
-        Collections.sort(loggers, new Comparator<LoggerConfigurationHolder>()
+        new PluginManager().findLoggerServices(this, new PluginManager.LoggerServicesFoundCallback()
         {
             @Override
-            public int compare(
-                    LoggerConfigurationHolder object1,
-                    LoggerConfigurationHolder object2) 
+            public void servicesFound(Map<ComponentName, LoggerServiceIdentifier> services) 
             {
-                return object1.getName().compareTo(object2.getName());
-            }
-        });
-        
-        for(final LoggerConfigurationHolder holder : loggers)
-        {
-            if(holder.isDeleted())
-                continue;
-            
-            final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
-            ps.setTitle(holder.getName());
-            ps.setSummary(holder.getDescription());
-                        
-            final CheckBoxPreference activate = new CheckBoxPreference(this)
-            {
-                @Override
-                protected boolean shouldPersist() { return false; }
-            };
-            activate.setKey(holder.getUniqueID());
-            activate.setTitle("Enabled");
-            activate.setSummary("Enable/Disable this logger");
-            activate.setChecked(holder.isEnabled());
-            activate.setOnPreferenceClickListener(
-                    new Preference.OnPreferenceClickListener()
-                    { 
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) 
+                final ArrayList<Entry<ComponentName, LoggerServiceIdentifier>> loggers =
+                    new ArrayList<Map.Entry<ComponentName,LoggerServiceIdentifier>>(
+                            services.entrySet());      
+                Collections.sort(loggers, new Comparator<Entry<ComponentName, LoggerServiceIdentifier>>()
                         {
-                            SharedPreferences.Editor editor = 
-                                getPreferenceManager().getSharedPreferences().edit();
-                            
-                            holder.setEnabled(activate.isChecked());                   
-                            ObjectMapper mapper = new ObjectMapper();
-                            try
+                            @Override
+                            public int compare(
+                                    Entry<ComponentName, LoggerServiceIdentifier> object1,
+                                    Entry<ComponentName, LoggerServiceIdentifier> object2) 
                             {
-                                editor.putString(getString(R.string.Preferences_loggers),
-                                        mapper.writeValueAsString(loggers));
+                                return object1.getValue().getName().compareTo(
+                                        object2.getValue().getName());
                             }
-                            catch(Exception e)
-                            {
-                                return false;
-                            }
-                            
-                            return editor.commit();
-                        }
-                    });
-            ps.addItemFromInflater(activate);
-            
-            if(holder.isConfigurable())
-            {
-                NonPersistingButtonPreference configure = new NonPersistingButtonPreference(this);
-                configure.setTitle("Configure");
-                ComponentName cn = new ComponentName(
-                        holder.getPackageName(), holder.getServiceClass());
-                configure.setOnPreferenceClickListener(
-                        new LoggerConfigureOnClickListener(
-                                cn.flattenToString()));
-                ps.addItemFromInflater(configure);
-            }
-            
-            if(!holder.isBuiltin())
-            {
-                NonPersistingButtonPreference remove = new NonPersistingButtonPreference(this);
-                remove.setTitle("Remove");
-                remove.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                        });
+                        
+                for(final Entry<ComponentName, LoggerServiceIdentifier> entry : loggers) 
                 {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) 
+                    final ComponentName name = entry.getKey();
+                    final LoggerServiceIdentifier identifier = entry.getValue();
+                    
+                    final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(ConfigurationActivity.this);
+                    ps.setTitle(identifier.getName());
+                    ps.setSummary(identifier.getDescription());
+                                
+                    final CheckBoxPreference activate = new CheckBoxPreference(ConfigurationActivity.this)
                     {
-                        List<LoggerConfigurationHolder> hs = configuration.getLoggerConfigurationHolders();
-                        for(LoggerConfigurationHolder h : hs)
-                            if(h.equals(holder))
-                            {
-                                h.setDeleted(true);
-                                break;
-                            }
-                        configuration.setLoggerConfigurationHolders(hs);
-                        cat.removePreference(ps);
-                        ps.getDialog().dismiss();
-                        return true;
+                        @Override protected boolean shouldPersist() { return false; }
+                    };
+                    activate.setKey(identifier.getUniqueID());
+                    activate.setTitle("Enabled");
+                    activate.setSummary("Enable/Disable this logger");
+                    activate.setChecked(enabledLoggers.contains(identifier.getUniqueID()));
+                    activate.setOnPreferenceClickListener(
+                            new Preference.OnPreferenceClickListener()
+                            { 
+                                @Override
+                                public boolean onPreferenceClick(Preference preference) 
+                                {
+                                    if(activate.isChecked() && 
+                                            !enabledLoggers.contains(identifier.getUniqueID()))
+                                    {
+                                        logger.debug("Enabling logger (" + identifier.getUniqueID() + ")" );
+                                        enabledLoggers.add(identifier.getUniqueID());
+                                        conf.setEnabledLoggers(enabledLoggers);                            
+                                    }
+                                    else if(!activate.isChecked() &&
+                                            enabledLoggers.contains(identifier.getUniqueID()))
+                                    {
+                                        logger.debug("Disabling logger (" + identifier.getUniqueID() + ")" );
+                                        enabledLoggers.remove(identifier.getUniqueID());
+                                        conf.setEnabledLoggers(enabledLoggers);
+                                    }
+                                    
+                                    return true;
+                                }
+                            });
+                    ps.addItemFromInflater(activate);
+                    
+                    if(identifier.isConfigurable())
+                    {
+                        NonPersistingButtonPreference configure = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                        configure.setTitle("Configure");
+                        configure.setOnPreferenceClickListener(
+                                new LoggerConfigureOnClickListener(
+                                        name.flattenToString()));
+                        ps.addItemFromInflater(configure);
                     }
-                });
-                ps.addItemFromInflater(remove);
+                    
+                    Intent i = new Intent();
+                    i.setComponent(name);
+                    bindService(
+                            i,
+                            new ServiceConnection()
+                            {
+                                @Override
+                                public void onServiceDisconnected(ComponentName ccname) { }
+                                
+                                @Override
+                                public void onServiceConnected(ComponentName ccname, IBinder service)
+                                {
+                                    LoggerService as = LoggerService.Stub.asInterface(service);
+                                    try
+                                    {
+                                        List<Action> actions = as.listActions();
+                                        if(actions == null || actions.size() == 0)
+                                            return;
+                                        for(final Action action : actions)
+                                        {
+                                            NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                                            p.setTitle(action.getName());
+                                            p.setSummary(action.getDescription());
+                                            p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                                            {
+                                                @Override
+                                                public boolean onPreferenceClick(Preference preference) 
+                                                {
+                                                    
+                                                    Intent i = new Intent();
+                                                    i.setComponent(name);
+                                                    bindService(i,
+                                                            new ServiceConnection()
+                                                            {
+                                                                @Override
+                                                                public void onServiceDisconnected(ComponentName name) { }
+                                                                
+                                                                @Override
+                                                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                                                {
+                                                                    ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                                                                    try
+                                                                    {
+                                                                        as.doAction(action);
+                                                                    }
+                                                                    catch(RemoteException e)
+                                                                    {
+                                                                        throw new RuntimeException(e);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        unbindService(this);
+                                                                    }
+                                                                }
+                                                            }, BIND_AUTO_CREATE);
+                                                    return true;
+                                                }
+                                            });
+                                            ps.addItemFromInflater(p);
+                                        }
+                                    }
+                                    catch(RemoteException e)
+                                    {
+                                        throw new RuntimeException(e);
+                                    }
+                                    finally
+                                    {
+                                        unbindService(this);
+                                    }
+                                }
+                            }, BIND_AUTO_CREATE);
+                    
+                    cat.addItemFromInflater(ps);
+                }
             }
-            
-            cat.addItemFromInflater(ps); 
-        }
+        });          
     }
     
     private void setupAppenderPreferences()
     {
         final Configuration conf = new Configuration(this);
-        final List<AppenderConfigurationHolder> appenders = conf.getAppenderConfigurationHolders();
+        final List<String> enabledAppenders = conf.getEnabledAppenders();
         final PreferenceCategory cat = (PreferenceCategory)findPreference(
                 getString(R.string.Preferences_category_appenders));
         
-        Collections.sort(appenders, new Comparator<AppenderConfigurationHolder>()
+        new PluginManager().findAppenderServices(this, new PluginManager.AppenderServicesFoundCallback()
         {
             @Override
-            public int compare(
-                    AppenderConfigurationHolder object1,
-                    AppenderConfigurationHolder object2) 
+            public void servicesFound(Map<ComponentName, AppenderServiceIdentifier> services) 
             {
-                return object1.getName().compareTo(object2.getName());
+                final ArrayList<Entry<ComponentName, AppenderServiceIdentifier>> appenders =
+                    new ArrayList<Map.Entry<ComponentName, AppenderServiceIdentifier>>(
+                            services.entrySet());      
+                Collections.sort(appenders, new Comparator<Entry<ComponentName, AppenderServiceIdentifier>>()
+                        {
+                            @Override
+                            public int compare(
+                                    Entry<ComponentName, AppenderServiceIdentifier> object1,
+                                    Entry<ComponentName, AppenderServiceIdentifier> object2) 
+                            {
+                                return object1.getValue().getName().compareTo(
+                                        object2.getValue().getName());
+                            }
+                        });
+                        
+                for(final Entry<ComponentName, AppenderServiceIdentifier> entry : appenders) 
+                {
+                    final ComponentName name = entry.getKey();
+                    final AppenderServiceIdentifier identifier = entry.getValue();
+                    
+                    final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(ConfigurationActivity.this);
+                    ps.setTitle(identifier.getName());
+                    ps.setSummary(identifier.getDescription());
+                                
+                    final CheckBoxPreference activate = new CheckBoxPreference(ConfigurationActivity.this)
+                    {
+                        @Override protected boolean shouldPersist() { return false; }
+                    };
+                    activate.setKey(identifier.getUniqueID());
+                    activate.setTitle("Enabled");
+                    activate.setSummary("Enable/Disable this appender");
+                    activate.setChecked(enabledAppenders.contains(identifier.getUniqueID()));
+                    activate.setOnPreferenceClickListener(
+                            new Preference.OnPreferenceClickListener()
+                            { 
+                                @Override
+                                public boolean onPreferenceClick(Preference preference) 
+                                {
+                                    if(activate.isChecked() && 
+                                            !enabledAppenders.contains(identifier.getUniqueID()))
+                                    {
+                                        logger.debug("Enabling appender (" + identifier.getUniqueID() + ")" );
+                                        enabledAppenders.add(identifier.getUniqueID());
+                                        conf.setEnabledAppenders(enabledAppenders);                            
+                                    }
+                                    else if(!activate.isChecked() &&
+                                            enabledAppenders.contains(identifier.getUniqueID()))
+                                    {
+                                        logger.debug("Disabling appender (" + identifier.getUniqueID() + ")" );
+                                        enabledAppenders.remove(identifier.getUniqueID());
+                                        conf.setEnabledAppenders(enabledAppenders);
+                                    }
+                                    
+                                    return true;
+                                }
+                            });
+                    ps.addItemFromInflater(activate);
+                    
+                    if(identifier.isConfigurable())
+                    {
+                        NonPersistingButtonPreference configure = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                        configure.setTitle("Configure");
+                        configure.setOnPreferenceClickListener(
+                                new AppenderConfigureOnClickListener(
+                                        name.flattenToString()));
+                        ps.addItemFromInflater(configure);
+                    }
+                    
+                    Intent i = new Intent();
+                    i.setComponent(name);
+                    bindService(
+                            i,
+                            new ServiceConnection()
+                            {
+                                @Override
+                                public void onServiceDisconnected(ComponentName ccname) { }
+                                
+                                @Override
+                                public void onServiceConnected(ComponentName ccname, IBinder service)
+                                {
+                                    ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                                    try
+                                    {
+                                        List<Action> actions = as.listActions();
+                                        if(actions == null || actions.size() == 0)
+                                            return;
+                                        for(final Action action : actions)
+                                        {
+                                            NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
+                                            p.setTitle(action.getName());
+                                            p.setSummary(action.getDescription());
+                                            p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
+                                            {
+                                                @Override
+                                                public boolean onPreferenceClick(Preference preference) 
+                                                {
+                                                    
+                                                    Intent i = new Intent();
+                                                    i.setComponent(name);
+                                                    bindService(i,
+                                                            new ServiceConnection()
+                                                            {
+                                                                @Override
+                                                                public void onServiceDisconnected(ComponentName name) { }
+                                                                
+                                                                @Override
+                                                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                                                {
+                                                                    ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
+                                                                    try
+                                                                    {
+                                                                        as.doAction(action);
+                                                                    }
+                                                                    catch(RemoteException e)
+                                                                    {
+                                                                        throw new RuntimeException(e);
+                                                                    }
+                                                                    finally
+                                                                    {
+                                                                        unbindService(this);
+                                                                    }
+                                                                }
+                                                            }, BIND_AUTO_CREATE);
+                                                    return true;
+                                                }
+                                            });
+                                            ps.addItemFromInflater(p);
+                                        }
+                                    }
+                                    catch(RemoteException e)
+                                    {
+                                        throw new RuntimeException(e);
+                                    }
+                                    finally
+                                    {
+                                        unbindService(this);
+                                    }
+                                }
+                            }, BIND_AUTO_CREATE);
+                    
+                    cat.addItemFromInflater(ps);
+                }
             }
         });
-        
-        for(final AppenderConfigurationHolder holder : appenders)
-        {
-            if(holder.isDeleted())
-                continue;
-            
-            final PreferenceScreen ps = getPreferenceManager().createPreferenceScreen(this);
-            ps.setTitle(holder.getName());
-            ps.setSummary(holder.getDescription());
-                        
-            final CheckBoxPreference activate = new CheckBoxPreference(this)
-            {
-                @Override
-                protected boolean shouldPersist() { return false; }
-            };
-            activate.setKey(holder.getUniqueID());
-            activate.setTitle("Enabled");
-            activate.setSummary("Enable/Disable this appender");
-            activate.setChecked(holder.isEnabled());
-            activate.setOnPreferenceClickListener(
-                    new Preference.OnPreferenceClickListener()
-                    { 
-                        @Override
-                        public boolean onPreferenceClick(Preference preference) 
-                        {
-                            SharedPreferences.Editor editor = 
-                                getPreferenceManager().getSharedPreferences().edit();
-                            
-                            holder.setEnabled(activate.isChecked());                   
-                            ObjectMapper mapper = new ObjectMapper();
-                            try
-                            {
-                                editor.putString(getString(R.string.Preferences_appenders),
-                                        mapper.writeValueAsString(appenders));
-                            }
-                            catch(Exception e)
-                            {
-                                return false;
-                            }
-                            
-                            return editor.commit();
-                        }
-                    });
-            ps.addItemFromInflater(activate);
-            
-            if(holder.isConfigurable())
-            {
-                NonPersistingButtonPreference configure = new NonPersistingButtonPreference(this);
-                configure.setTitle("Configure");
-                ComponentName cn = new ComponentName(
-                        holder.getPackageName(), holder.getServiceClass());
-                configure.setOnPreferenceClickListener(
-                            new AppenderConfigureOnClickListener(
-                                    cn.flattenToString()));
-                         
-                ps.addItemFromInflater(configure);
-            }
-            
-            if(!holder.isBuiltin())
-            {
-                NonPersistingButtonPreference remove = new NonPersistingButtonPreference(this);
-                remove.setTitle("Remove");
-                remove.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-                {
-                    @Override
-                    public boolean onPreferenceClick(Preference preference) 
-                    {
-                        List<AppenderConfigurationHolder> hs = configuration.getAppenderConfigurationHolders();
-                        for(AppenderConfigurationHolder h : hs)
-                            if(h.equals(holder))
-                            {
-                                h.setDeleted(true);
-                                break;
-                            }
-                        configuration.setAppenderConfigurationHolders(hs);
-                        cat.removePreference(ps);
-                        ps.getDialog().dismiss();
-                        return true;
-                    }
-                });
-                ps.addItemFromInflater(remove);
-            }
-            
-            
-            Intent i = new Intent();
-            i.setComponent(new ComponentName(holder.getPackageName(), holder.getServiceClass()));
-            bindService(
-                    i,
-                    new ServiceConnection()
-                    {
-                        @Override
-                        public void onServiceDisconnected(ComponentName name) { }
-                        
-                        @Override
-                        public void onServiceConnected(ComponentName name, IBinder service)
-                        {
-                            ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
-                            try
-                            {
-                                List<Action> actions = as.listActions();
-                                if(actions == null || actions.size() == 0)
-                                    return;
-                                for(final Action action : actions)
-                                {
-                                    NonPersistingButtonPreference p = new NonPersistingButtonPreference(ConfigurationActivity.this);
-                                    p.setTitle(action.getName());
-                                    p.setSummary(action.getDescription());
-                                    p.setOnPreferenceClickListener(new Preference.OnPreferenceClickListener()
-                                    {
-                                        @Override
-                                        public boolean onPreferenceClick(Preference preference) 
-                                        {
-                                            
-                                            Intent i = new Intent();
-                                            i.setComponent(new ComponentName(
-                                                    holder.getPackageName(), holder.getServiceClass()));
-                                            bindService(i,
-                                                    new ServiceConnection()
-                                                    {
-                                                        @Override
-                                                        public void onServiceDisconnected(ComponentName name) { }
-                                                        
-                                                        @Override
-                                                        public void onServiceConnected(ComponentName name, IBinder service) 
-                                                        {
-                                                            ManagedAppenderService as = ManagedAppenderService.Stub.asInterface(service);
-                                                            try
-                                                            {
-                                                                as.doAction(action);
-                                                            }
-                                                            catch(RemoteException e)
-                                                            {
-                                                                throw new RuntimeException(e);
-                                                            }
-                                                            finally
-                                                            {
-                                                                unbindService(this);
-                                                            }
-                                                        }
-                                                    }, BIND_AUTO_CREATE);
-                                            return true;
-                                        }
-                                    });
-                                    ps.addItemFromInflater(p);
-                                }
-                            }
-                            catch(RemoteException e)
-                            {
-                                throw new RuntimeException(e);
-                            }
-                            finally
-                            {
-                                unbindService(this);
-                            }
-                        }
-                    }, BIND_AUTO_CREATE);
-            
-            
-            cat.addItemFromInflater(ps); 
-        }
     }
 }

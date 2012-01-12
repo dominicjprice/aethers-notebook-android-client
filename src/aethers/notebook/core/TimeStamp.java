@@ -72,4 +72,14 @@ implements Parcelable
         dest.writeLong(systemTime);
         dest.writeString(timezone);        
     }
+    
+    @Override
+    public boolean equals(Object o)
+    {
+        if(!(o instanceof TimeStamp))
+            return false;
+        TimeStamp t = (TimeStamp)o;
+        return systemTime == t.getSystemTime()
+                && timezone != null && timezone.equals(t.getTimezone());
+    }
 }

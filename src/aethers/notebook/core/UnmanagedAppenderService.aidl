@@ -7,5 +7,9 @@ import android.location.Location;
 
 interface UnmanagedAppenderService
 {    
-    void log(in LoggerServiceIdentifier identifier, in TimeStamp timestamp, in Location location, in byte[] data);
+    void log(
+            in LoggerServiceIdentifier identifier,
+            in TimeStamp timestamp,
+            in Location location,
+            in byte[] data);
 }

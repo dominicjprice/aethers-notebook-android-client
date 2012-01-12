@@ -24,7 +24,6 @@ extends PushLogger<OnSharedPreferenceChangeListener>
         IDENTIFIER.setConfigurable(true);
         IDENTIFIER.setDescription("Logs position");
         IDENTIFIER.setName("Position Logger");
-        IDENTIFIER.setServiceClass(PositionLogger.class.getName());
         IDENTIFIER.setVersion(1);
     }
     
@@ -185,6 +184,12 @@ extends PushLogger<OnSharedPreferenceChangeListener>
         Intent i = new Intent(this, ConfigurationActivity.class);
         i.setFlags(Intent.FLAG_ACTIVITY_NEW_TASK);
         startActivity(i);
+    }
+    
+    @Override
+    protected LoggerServiceIdentifier getIdentifier() 
+    {
+        return IDENTIFIER;
     }
     
     private void registerListeners()

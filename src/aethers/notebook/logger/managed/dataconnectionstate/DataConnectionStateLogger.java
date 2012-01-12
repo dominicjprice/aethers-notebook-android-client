@@ -18,7 +18,6 @@ extends PushLogger<PhoneStateListener>
         IDENTIFIER.setConfigurable(false);
         IDENTIFIER.setDescription("Logs when the data connection state changes.");
         IDENTIFIER.setName("Data Connection State Logger");
-        IDENTIFIER.setServiceClass(DataConnectionStateLogger.class.getName());
         IDENTIFIER.setVersion(1);
     }
 
@@ -109,5 +108,11 @@ extends PushLogger<PhoneStateListener>
     protected void postLogging(PhoneStateListener psl) 
     {
         telephonyManager.listen(psl, PhoneStateListener.LISTEN_NONE);
+    }
+    
+    @Override
+    protected LoggerServiceIdentifier getIdentifier() 
+    {
+        return IDENTIFIER;
     }
 }

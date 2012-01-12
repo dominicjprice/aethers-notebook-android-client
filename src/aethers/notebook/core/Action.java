@@ -85,8 +85,8 @@ implements Parcelable
         if(!(o instanceof Action))
             return false;
         Action i = (Action)o;
-        if(ID == null)
-            return i.getID() == null;
+        if(ID == null || i.getID() == null)
+            return false;
         return ID.equals(i.getID());
 }
 }

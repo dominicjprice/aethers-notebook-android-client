@@ -25,7 +25,6 @@ extends PushLogger<PhoneStateListener>
         IDENTIFIER.setConfigurable(false);
         IDENTIFIER.setDescription("Logs when the cell location changes.");
         IDENTIFIER.setName("Cell Location Logger");
-        IDENTIFIER.setServiceClass(CellLocationLogger.class.getName());
         IDENTIFIER.setVersion(1);
     }
 
@@ -62,6 +61,11 @@ extends PushLogger<PhoneStateListener>
         telephonyManager.listen(psl, PhoneStateListener.LISTEN_NONE);
     }
     
+    @Override
+    protected LoggerServiceIdentifier getIdentifier() 
+    {
+        return IDENTIFIER;
+    }    
         
     private void logLocation(CellLocation location)
     throws  JSONException,

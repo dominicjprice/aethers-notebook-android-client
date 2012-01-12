@@ -2,7 +2,7 @@
 <manifest 
         xmlns:android="http://schemas.android.com/apk/res/android"
         package="aethers.notebook"
-        android:versionName="1.0.2" android:versionCode="3">
+        android:versionName="1.1.0" android:versionCode="4">
 
     <uses-sdk android:targetSdkVersion="8" android:minSdkVersion="8" />
 
@@ -42,15 +42,55 @@
             </intent-filter>
         </service>
         
-        <service android:name=".appender.managed.file.FileAppender" />
-        <service android:name=".appender.managed.uploader.UploaderAppender" />
+        <service android:name=".appender.managed.file.FileAppender">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.APPENDER" />
+            </intent-filter>
+        </service>
+        <service android:name=".appender.managed.uploader.UploaderAppender">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.APPENDER" />
+            </intent-filter>
+        </service>
         
-        <service android:name=".logger.managed.celllocation.CellLocationLogger" />
-        <service android:name=".logger.managed.dataconnectionstate.DataConnectionStateLogger" />
-        <service android:name=".logger.managed.position.PositionLogger" />
-        <service android:name=".logger.managed.servicestate.ServiceStateLogger" />
-        <service android:name=".logger.managed.signalstrength.SignalStrengthLogger" />
-        <service android:name=".logger.managed.wifi.WifiLogger" />
+        <service android:name=".logger.managed.celllocation.CellLocationLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
+        <service android:name=".logger.managed.dataconnectionstate.DataConnectionStateLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
+        <service android:name=".logger.managed.position.PositionLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
+        <service android:name=".logger.managed.servicestate.ServiceStateLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
+        <service android:name=".logger.managed.signalstrength.SignalStrengthLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
+        <service android:name=".logger.managed.wifi.WifiLogger">
+            <intent-filter>
+                <action android:name="aethers.notebook.action.CORE" />
+                <category android:name="aethers.notebook.action.category.LOGGER" />
+            </intent-filter>
+        </service>
         
         <receiver android:name=".core.BootReceiver" >
             <intent-filter>

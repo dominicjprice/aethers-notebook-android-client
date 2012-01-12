@@ -6,10 +6,9 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 import java.util.TimeZone;
+import java.util.Map.Entry;
 
 import aethers.notebook.R;
-import aethers.notebook.core.Configuration.AppenderConfigurationHolder;
-import aethers.notebook.core.Configuration.LoggerConfigurationHolder;
 import aethers.notebook.util.Logger;
 
 import android.app.Service;
@@ -212,114 +211,6 @@ extends Service
         {
             unmanagedAppenders.remove(identifier.getUniqueID());            
         }
-
-        @Override
-        public void registerManagedLogger(LoggerServiceIdentifier identifier)
-        throws RemoteException 
-        {
-            LoggerConfigurationHolder newholder = new LoggerConfigurationHolder(identifier.getUniqueID());
-            newholder.setBuiltin(false);
-            newholder.setConfigurable(identifier.isConfigurable());
-            newholder.setDeleted(false);
-            newholder.setDescription(identifier.getDescription());
-            newholder.setEnabled(false);
-            newholder.setPackageName(identifier.getPackageName());
-            newholder.setName(identifier.getName());
-            newholder.setServiceClass(identifier.getServiceClass());
-            newholder.setVersion(identifier.getVersion());
-            List<LoggerConfigurationHolder> holders = configuration.getLoggerConfigurationHolders();
-            LoggerConfigurationHolder holder = null;
-            for(LoggerConfigurationHolder h : holders)
-                if(h.getUniqueID().equals(identifier.getUniqueID()))
-                {
-                    holder = h;
-                    break;
-                }
-            if(holder != null)
-            {
-                newholder.setEnabled(holder.isEnabled());
-                holders.remove(holder);
-            }
-            holders.add(newholder);
-            configuration.setLoggerConfigurationHolders(holders);
-        }
-        
-        @Override 
-        public boolean isManagedLoggerInstalled(LoggerServiceIdentifier identifier)
-        {
-            List<LoggerConfigurationHolder> holders = configuration.getLoggerConfigurationHolders();
-            for(LoggerConfigurationHolder h : holders)
-                if(h.equals(identifier) && !h.isDeleted())
-                    return true;
-            return false;
-        }
-        
-        @Override 
-        public void deregisterManagedLogger(LoggerServiceIdentifier identifier)
-        {
-            List<LoggerConfigurationHolder> holders = configuration.getLoggerConfigurationHolders();
-            for(LoggerConfigurationHolder h : holders)
-                if(h.equals(identifier))
-                {
-                    h.setDeleted(true);
-                    break;
-                }
-            configuration.setLoggerConfigurationHolders(holders);
-        }
-        
-        @Override
-        public void registerManagedAppender(AppenderServiceIdentifier identifier)
-        throws RemoteException 
-        {
-            AppenderConfigurationHolder newholder = new AppenderConfigurationHolder(identifier.getUniqueID());
-            newholder.setBuiltin(false);
-            newholder.setConfigurable(identifier.isConfigurable());
-            newholder.setDeleted(false);
-            newholder.setDescription(identifier.getDescription());
-            newholder.setEnabled(false);
-            newholder.setPackageName(identifier.getPackageName());
-            newholder.setName(identifier.getName());
-            newholder.setServiceClass(identifier.getServiceClass());
-            newholder.setVersion(identifier.getVersion());
-            List<AppenderConfigurationHolder> holders = configuration.getAppenderConfigurationHolders();
-            AppenderConfigurationHolder holder = null;
-            for(AppenderConfigurationHolder h : holders)
-                if(h.getUniqueID().equals(identifier.getUniqueID()))
-                {
-                    holder = h;
-                    break;
-                }
-            if(holder != null)
-            {
-                newholder.setEnabled(holder.isEnabled());
-                holders.remove(holder);
-            }
-            holders.add(newholder);
-            configuration.setAppenderConfigurationHolders(holders);
-        }
-        
-        @Override 
-        public boolean isManagedAppenderInstalled(AppenderServiceIdentifier identifier)
-        {
-            List<AppenderConfigurationHolder> holders = configuration.getAppenderConfigurationHolders();
-            for(AppenderConfigurationHolder h : holders)
-                if(h.equals(identifier) && !h.isDeleted())
-                    return true;
-            return false;
-        }
-        
-        @Override 
-        public void deregisterManagedAppender(AppenderServiceIdentifier identifier)
-        {
-            List<AppenderConfigurationHolder> holders = configuration.getAppenderConfigurationHolders();
-            for(AppenderConfigurationHolder h : holders)
-                if(h.equals(identifier))
-                {
-                    h.setDeleted(true);
-                    break;
-                }
-            configuration.setAppenderConfigurationHolders(holders);
-        }
     };
     
     private final LocationListener locationListener = new LocationListener();
@@ -347,17 +238,17 @@ extends Service
                         SharedPreferences sharedPreferences,
                         String key) 
                 {
-                    if(key.equals(getString(R.string.Preferences_loggers)))
-                        startStopLoggers();
-                    else if(key.equals(getString(R.string.Preferences_appenders)))
-                        startStopAppenders();
-                    else if(key.equals(getString(R.string.Preferences_enabled)) 
+                    if(key.equals(getString(R.string.Preferences_enabled)) 
                             && !configuration.isEnabled())
                     {
                         startStopLoggers();
                         startStopAppenders();
                         stopSelf();
                     }
+                    else if(key.equals(getString(R.string.Preferences_appenders_enabled)))
+                        startStopAppenders();
+                    else if(key.equals(getString(R.string.Preferences_loggers_enabled)))
+                        startStopLoggers();
                 }
             };            
     
@@ -416,99 +307,115 @@ extends Service
     
     private void startStopLoggers()
     {
+        logger.debug("Starting/Stopping Loggers");
         final boolean loggingEnabled = configuration.isEnabled();
-        for(final LoggerConfigurationHolder holder : configuration.getLoggerConfigurationHolders())
+        final Configuration conf = new Configuration(this);
+        final List<String> enabledLoggers = conf.getEnabledLoggers();
+        new PluginManager().findLoggerServices(this, new PluginManager.LoggerServicesFoundCallback()
         {
-            Intent intent = new Intent();
-            intent.setComponent(
-                    new ComponentName(
-                            holder.getPackageName(),
-                            holder.getServiceClass()));
-            bindService(intent,
-                    new ServiceConnection()
-                    {
-                        @Override
-                        public void onServiceDisconnected(ComponentName name) { }
-                        
-                        @Override
-                        public void onServiceConnected(ComponentName name, IBinder service) 
-                        { 
-                            LoggerService s = LoggerService.Stub.asInterface(service);
-                            try
+            @Override
+            public void servicesFound(Map<ComponentName, LoggerServiceIdentifier> services) 
+            {        
+                for(final Entry<ComponentName, LoggerServiceIdentifier> entry : services.entrySet()) 
+                {
+                    Intent intent = new Intent();
+                    intent.setComponent(entry.getKey());
+                    bindService(intent,
+                            new ServiceConnection()
                             {
-                                if(holder.isEnabled() && loggingEnabled && !holder.isDeleted())
-                                    s.start();
-                                else
-                                    s.stop();
-                            }
-                            catch(RemoteException e)
-                            {
-                                logger.error(e.getMessage(), e);
-                            }
-                            unbindService(this);                                                                        
-                        }
-                    }, BIND_AUTO_CREATE);
-        }
+                                @Override
+                                public void onServiceDisconnected(ComponentName name) { }
+                                
+                                @Override
+                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                { 
+                                    LoggerService s = LoggerService.Stub.asInterface(service);
+                                    try
+                                    {
+                                        if(enabledLoggers.contains(entry.getValue().getUniqueID())
+                                                && loggingEnabled)
+                                            s.start();
+                                        else
+                                            s.stop();
+                                    }
+                                    catch(RemoteException e)
+                                    {
+                                        logger.error(e.getMessage(), e);
+                                    }
+                                    unbindService(this);                                                                        
+                                }
+                            }, BIND_AUTO_CREATE);
+                }
+            }
+        });
     }
     
     private void startStopAppenders()
     {
+        logger.debug("Starting/Stopping Appenders");
         final boolean loggingEnabled = configuration.isEnabled();
         final ArrayList<ManagedAppenderService> appenders = new ArrayList<ManagedAppenderService>();
+        final Configuration conf = new Configuration(this);
+        final List<String> enabledAppenders = conf.getEnabledAppenders();
         
-        for(final AppenderConfigurationHolder holder : configuration.getAppenderConfigurationHolders())
+        new PluginManager().findAppenderServices(this, new PluginManager.AppenderServicesFoundCallback()
         {
-            Intent intent = new Intent();
-            intent.setComponent(
-                    new ComponentName(
-                            holder.getPackageName(),
-                            holder.getServiceClass()));
-            bindService(intent,
-                    new ServiceConnection()
-                    {
-                        private ManagedAppenderService appenderService;
-                        
-                        @Override
-                        public void onServiceDisconnected(ComponentName name)
-                        {
-                            synchronized(appenderSync)
+            @Override
+            public void servicesFound(Map<ComponentName, AppenderServiceIdentifier> services) 
+            {
+                for(final Entry<ComponentName, AppenderServiceIdentifier> entry : services.entrySet()) 
+                {
+                    Intent intent = new Intent();
+                    intent.setComponent(entry.getKey());
+                    bindService(intent,
+                            new ServiceConnection()
                             {
-                                activeAppenders.remove(appenderService);
-                            }
-                            appenderService = null;
-                        }
-                        
-                        @Override
-                        public void onServiceConnected(ComponentName name, IBinder service) 
-                        { 
-                            ManagedAppenderService appenderService = ManagedAppenderService.Stub.asInterface(service);
-                            try
-                            {
-                                if(holder.isEnabled() && loggingEnabled && !holder.isDeleted())
+                                private ManagedAppenderService appenderService;
+                                
+                                @Override
+                                public void onServiceDisconnected(ComponentName name)
                                 {
-                                    appenderService.start();
-                                    appenders.add(appenderService);
-                                    activeConnections.put(name.getPackageName() + name.getClassName(), this);
+                                    synchronized(appenderSync)
+                                    {
+                                        activeAppenders.remove(appenderService);
+                                    }
+                                    appenderService = null;
                                 }
-                                else
-                                {
-                                    appenderService.stop();
-                                    unbindService(this);
-                                    if(activeConnections.containsKey(name.getPackageName() + name.getClassName()))
-                                        unbindService(activeConnections.remove(name.getPackageName() + name.getClassName()));
+                                
+                                @Override
+                                public void onServiceConnected(ComponentName name, IBinder service) 
+                                { 
+                                    ManagedAppenderService appenderService = ManagedAppenderService.Stub.asInterface(service);
+                                    try
+                                    {
+                                        if(enabledAppenders.contains(entry.getValue().getUniqueID())
+                                                && loggingEnabled)
+                                        {
+                                            appenderService.start();
+                                            appenders.add(appenderService);
+                                            activeConnections.put(name.getPackageName() + name.getClassName(), this);
+                                        }
+                                        else
+                                        {
+                                            appenderService.stop();
+                                            unbindService(this);
+                                            if(activeConnections.containsKey(name.getPackageName() + name.getClassName()))
+                                                unbindService(activeConnections.remove(name.getPackageName() + name.getClassName()));
+                                        }
+                                    }
+                                    catch(RemoteException e)
+                                    {
+                                        logger.error(e.getMessage(), e);
+                                    }  
                                 }
-                            }
-                            catch(RemoteException e)
-                            {
-                                logger.error(e.getMessage(), e);
-                            }  
-                        }
-                    }, BIND_AUTO_CREATE);     
-        }
-        
-        synchronized(appenderSync)
-        {
-            activeAppenders = appenders;
-        }
+                            }, BIND_AUTO_CREATE);     
+                }
+                
+                synchronized(appenderSync)
+                {
+                    activeAppenders = appenders;
+                }
+            }
+        });
     }
 }

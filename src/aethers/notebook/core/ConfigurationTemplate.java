@@ -1,5 +1,10 @@
 package aethers.notebook.core;
 
+import java.util.List;
+
+import org.codehaus.jackson.map.ObjectMapper;
+import org.codehaus.jackson.type.TypeReference;
+
 import android.content.Context;
 import android.content.SharedPreferences;
 import android.content.SharedPreferences.Editor;
@@ -17,7 +22,6 @@ public class ConfigurationTemplate
         prefs = context.getSharedPreferences(
                 sharedPreferencesName, 
                 Context.MODE_PRIVATE);
-        //prefs.edit().clear().commit();
     }
     
     public void registerChangeListener(OnSharedPreferenceChangeListener listener)
@@ -93,6 +97,36 @@ public class ConfigurationTemplate
         Editor e = prefs.edit();
         e.putString(context.getString(prefName), value);
         e.commit();
+    }
+    
+    protected List<String> getStringList(int prefName, int prefDefault)
+    {
+        String l = prefs.getString(context.getString(prefName),
+                context.getString(prefDefault));
+        ObjectMapper mapper = new ObjectMapper();
+        try
+        {
+            return mapper.readValue(l, new TypeReference<List<String>>() { });
+        }
+        catch(Exception e)
+        {
+            throw new RuntimeException(e);
+        }
+    }
+    
+    protected void setStringList(int prefName, List<String> value)
+    {
+        try
+        {
+            Editor e = prefs.edit();
+            ObjectMapper mapper = new ObjectMapper();
+            e.putString(context.getString(prefName), mapper.writeValueAsString(value));
+            e.commit();
+        }
+        catch(Exception ex)
+        {
+            throw new RuntimeException(ex);
+        }
     }
     
     protected Context getContext()

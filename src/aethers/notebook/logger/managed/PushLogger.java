@@ -1,8 +1,13 @@
 package aethers.notebook.logger.managed;
 
+import java.util.ArrayList;
+import java.util.List;
+
+import aethers.notebook.core.Action;
 import aethers.notebook.core.AethersNotebook;
 import aethers.notebook.core.CoreService;
 import aethers.notebook.core.LoggerService;
+import aethers.notebook.core.LoggerServiceIdentifier;
 
 import android.app.Service;
 import android.content.ComponentName;
@@ -21,6 +26,13 @@ implements Runnable
     private final LoggerService.Stub loggerServiceStub = 
             new LoggerService.Stub()
             {
+                @Override
+                public LoggerServiceIdentifier getIdentifier()
+                throws RemoteException
+                {
+                    return PushLogger.this.getIdentifier();
+                }
+        
                 @Override
                 public void configure()
                 throws RemoteException 
@@ -52,7 +64,21 @@ implements Runnable
                 throws RemoteException 
                 {
                     PushLogger.this.stopSelf();
-                }       
+                }   
+                
+                @Override
+                public List<Action> listActions() 
+                throws RemoteException 
+                {
+                    return PushLogger.this.listActions();
+                }
+
+                @Override
+                public void doAction(Action action) 
+                throws RemoteException 
+                {
+                    PushLogger.this.doAction(action); 
+                }
             };
     
     private final ServiceConnection loggerConnection = 
@@ -140,6 +166,8 @@ implements Runnable
         postLogging(t);
     }
     
+    protected abstract LoggerServiceIdentifier getIdentifier();
+    
     protected T preLogging()
     {
         return null;
@@ -151,6 +179,18 @@ implements Runnable
     }
     
     protected void configure()
+    {
+        
+    }
+    
+    protected List<Action> listActions() 
+    throws RemoteException 
+    {
+        return new ArrayList<Action>();
+    }
+
+    protected void doAction(Action action) 
+    throws RemoteException 
     {
         
     }

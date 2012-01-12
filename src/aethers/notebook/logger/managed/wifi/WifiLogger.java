@@ -1,10 +1,12 @@
 package aethers.notebook.logger.managed.wifi;
 
+import java.util.ArrayList;
 import java.util.List;
 
 import org.json.JSONStringer;
 
 import aethers.notebook.R;
+import aethers.notebook.core.Action;
 import aethers.notebook.core.AethersNotebook;
 import aethers.notebook.core.CoreService;
 import aethers.notebook.core.LoggerServiceIdentifier;
@@ -29,10 +31,9 @@ implements Runnable
     private static final LoggerServiceIdentifier IDENTIFIER = new LoggerServiceIdentifier(
             "aethers.notebook.logger.managed.wifi.WifiLogger");
     {
-        IDENTIFIER.setConfigurable(false);
+        IDENTIFIER.setConfigurable(true);
         IDENTIFIER.setDescription("Logs the results of scanning Wifi access points");
         IDENTIFIER.setName("Wifi Logger");
-        IDENTIFIER.setServiceClass(WifiLogger.class.getName());
         IDENTIFIER.setVersion(1);
     }
 
@@ -41,6 +42,13 @@ implements Runnable
     private final LoggerService.Stub loggerServiceStub = 
             new LoggerService.Stub()
             {
+                @Override
+                public LoggerServiceIdentifier getIdentifier()
+                throws RemoteException
+                {
+                    return IDENTIFIER;
+                }
+        
                 @Override
                 public void configure() 
                 throws RemoteException 
@@ -75,6 +83,17 @@ implements Runnable
                 {
                     WifiLogger.this.stopSelf();
                 }
+
+                @Override
+                public List<Action> listActions() 
+                throws RemoteException 
+                {
+                    return new ArrayList<Action>();
+                }
+
+                @Override
+                public void doAction(Action action) 
+                throws RemoteException { /* No-op */ }
             };
     
     private final ServiceConnection loggerConnection = 

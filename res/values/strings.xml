@@ -22,121 +22,13 @@
     
     <string name="Preferences_category_loggers">Preferences.category.loggers</string>
     
-    <string name="Preferences_loggers">Preferences.loggers</string>
-    <string name="Preferences_loggers_default">
-        [
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.wifi.WifiLogger\",
-                \"name\" : \"Wifi Logger\",
-                \"description\" : \"Logs the results of scanning Wifi access points\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.wifi.WifiLogger\",
-                \"configurable\" : true,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
-                \"name\" : \"Position Logger\",
-                \"description\" : \"Logs position\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.position.PositionLogger\",
-                \"configurable\" : true,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.celllocation.CellLocationLogger\",
-                \"name\" : \"Cell Location Logger\",
-                \"description\" : \"Logs when the cell location changes.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.celllocation.CellLocationLogger\",
-                \"configurable\" : false,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.dataconnectionstate.DataConnectionStateLogger\",
-                \"name\" : \"Data Connection State Logger\",
-                \"description\" : \"Logs when the data connection state changes.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.dataconnectionstate.DataConnectionStateLogger\",
-                \"configurable\" : false,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.servicestate.ServiceStateLogger\",
-                \"name\" : \"Service State Logger\",
-                \"description\" : \"Logs when the service state changes.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.servicestate.ServiceStateLogger\",
-                \"configurable\" : false,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.logger.managed.signalstrength.SignalStrengthLogger\",
-                \"name\" : \"Signal Strength Logger\",
-                \"description\" : \"Logs when the signal strength changes.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.logger.managed.signalstrength.SignalStrengthLogger\",
-                \"configurable\" : false,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            }
-        ]
-    </string>
-    
-    <string name="Preferences_loggers_version">Preferences.loggers.default</string>
-    <string name="Preferences_loggers_version_default">1</string>
-    
+    <string name="Preferences_loggers_enabled">Preferences.loggers.enabled</string>
+    <string name="Preferences_loggers_enabled_default">[]</string>
+      
     <string name="Preferences_category_appenders">Preferences.category.appenders</string>
     
-    <string name="Preferences_appenders">Preferences.appenders</string>
-    <string name="Preferences_appenders_default">
-        [
-            {
-                \"uniqueID\" : \"aethers.notebook.appender.managed.file.FileAppender\",
-                \"name\" : \"File Appender\",
-                \"description\" : \"Appends log messages to the filesystem.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.appender.managed.file.FileAppender\",
-                \"configurable\" : true,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            },
-            {
-                \"uniqueID\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
-                \"name\" : \"Uploader Appender\",
-                \"description\" : \"Pushes log messages to a remote server.\",
-                \"packageName\" : \"aethers.notebook\",
-                \"serviceClass\" : \"aethers.notebook.appender.managed.uploader.UploaderAppender\",
-                \"configurable\" : true,
-                \"enabled\" : false,
-                \"builtin\" : true,
-                \"deleted\" : false,
-                \"version\" : 1
-            }
-        ]
-    </string>
-    
-    <string name="Preferences_appenders_version">Preferences.appenders.default</string>
-    <string name="Preferences_appenders_version_default">1</string>
+    <string name="Preferences_appenders_enabled">Preferences.appenders.enabled</string>
+    <string name="Preferences_appenders_enabled_default">[]</string>
     
     <!-- Logcat Logger Preferences -->
     
